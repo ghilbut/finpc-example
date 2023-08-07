@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package board;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/ghilbut/finpc/grpc";
+
+service Board {
+  rpc PostSubject (newSubject) returns (Subject);
+  rpc DeleteSubject (SubjectId) returns (google.protobuf.Empty);
+  rpc GetSubjectList (google.protobuf.Empty) returns (SubjectList);
+
+  rpc PostQuestion (newQuestion) returns (Question);
+  rpc DeleteQuestion (QuestionId) returns (google.protobuf.Empty);
+  rpc GetQuestionList (SubjectId) returns (QuestionList);
+  rpc GetQuestion (QuestionId) returns (Question);
+
+  rpc LikeQuestion (QuestionId) returns (google.protobuf.Empty);
+  rpc LikeQuestionCancel (QuestionId) returns (google.protobuf.Empty);
+}
+
+message newSubject {
+  string title = 1;
+}
+
+message Subject {
+  int64 id = 1;
+  string title = 2;
+}
+
+message SubjectId {
+  int64 id = 1;
+}
+
+message newQuestion {
+  string question = 1;
+  int64 subject_id = 2;
+}
+
+message Question {
+  int64 id = 1;
+  string question = 2;
+  int64 likes_count = 3;
+}
+
+message QuestionList {
+  repeated Question question_list = 1;
+}
+
+message SubjectList {
+  repeated Subject subject_list = 1;
+}
+
+message QuestionId {
+  int64 id = 1;
+}

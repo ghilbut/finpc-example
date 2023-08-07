@@ -70,5 +70,8 @@ func NewGrpcServer(db *sql.DB) *grpc.Server {
 	trading := Trading{}
 	RegisterTradingServer(grpcServer, &trading)
 
+	board := Board{}
+	RegisterBoardServer(grpcServer, &board)
+
 	return grpcServer
 }
