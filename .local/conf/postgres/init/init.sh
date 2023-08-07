@@ -35,7 +35,6 @@ psql -v ON_ERROR_STOP=1 --username postgres --dbname postgres <<-EOSQL
   CREATE TABLE "question" (
       "id"         BIGSERIAL PRIMARY KEY,
       "question"   TEXT      NOT NULL,
-      "likes"      BIGINT DEFAULT 0,
       "subject_id" BIGSERIAL NOT NULL,
       FOREIGN KEY (subject_id) REFERENCES subject (id)
           ON UPDATE CASCADE ON DELETE CASCADE
