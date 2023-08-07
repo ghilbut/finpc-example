@@ -136,38 +136,24 @@ func (b *Board) GetQuestion(ctx context.Context, questionId *QuestionId) (*Quest
 func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*QuestionList, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	likesRows, err := db.Query("SELECT question_id, COUNT(*) AS count FROM likes WHERE subject_id = ? GROUP BY question_id ORDER BY count DESC;", subjectId)
+	rows, err := db.Query("SELECT id, question, likes FROM question WHERE subject_id = ? ORDER BY likes DESC;", subjectId)
 	if err != nil {
 		log.Errorf("ListQuestion: %s", err)
 		return nil, err
 	}
-	defer likesRows.Close()
+	defer rows.Close()
 
 	var list []*Question
 
-	for likesRows.Next() {
+	for rows.Next() {
 		var id int64
 		var question string
 		var likesCount int64
 
-		if err := likesRows.Scan(&id, &likesCount); err != nil {
+		if err := rows.Scan(&id, &question, &likesCount); err != nil {
 			log.Errorf("ListQuestion: %s", err)
 			return nil, err
 		}
-
-		questionRows, err := db.Query("SELECT question FROM question WHERE id = ?;", id)
-		if err != nil {
-			log.Errorf("ListQuestion: %s", err)
-			return nil, err
-		}
-
-		for questionRows.Next() {
-			if err := questionRows.Scan(&question); err != nil {
-				log.Errorf("ListQuestion: %s", err)
-				return nil, err
-			}
-		}
-		questionRows.Close()
 
 		list = append(list, &Question{
 			Id:         id,
@@ -181,10 +167,10 @@ func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*Questi
 	}, nil
 }
 
-func (b *Board) Like(ctx context.Context, likes *Likes) (*emptypb.Empty, error) {
+func (b *Board) Like(ctx context.Context, questionId *QuestionId) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	if err := insertLikes(db, likes.UserId, likes.QuestionId); err != nil {
+	if err := addQuestionLikes(db, questionId.Id); err != nil {
 		log.Errorf("Like: %s", err)
 		return nil, err
 	}
@@ -192,10 +178,10 @@ func (b *Board) Like(ctx context.Context, likes *Likes) (*emptypb.Empty, error) 
 	return nil, nil
 }
 
-func (b *Board) Unlike(ctx context.Context, likes *Likes) (*emptypb.Empty, error) {
+func (b *Board) Unlike(ctx context.Context, questionId *QuestionId) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	if err := deleteLikes(db, likes.UserId, likes.QuestionId); err != nil {
+	if err := subQuestionLikes(db, questionId.Id); err != nil {
 		log.Errorf("Unlike: %s", err)
 		return nil, err
 	}
@@ -293,7 +279,7 @@ func insertQuestion(db *sql.DB, question string, subjectId int64) (int64, error)
 }
 
 func selectQuestion(db *sql.DB, id int64) (*Question, error) {
-	rows, err := db.Query("SELECT id, question FROM question WHERE id = '?'", id)
+	rows, err := db.Query("SELECT id, question, likes FROM question WHERE id = '?'", id)
 	if err != nil {
 		return nil, err
 	}
@@ -302,19 +288,7 @@ func selectQuestion(db *sql.DB, id int64) (*Question, error) {
 	question := &Question{}
 
 	for rows.Next() {
-		if err := rows.Scan(&question.Id, &question.Question); err != nil {
-			return nil, err
-		}
-	}
-
-	rows, err = db.Query("SELECT COUNT(*) FROM likes WHERE question_id = ?", id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&question.LikesCount); err != nil {
+		if err := rows.Scan(&question.Id, &question.Question, &question.LikesCount); err != nil {
 			return nil, err
 		}
 	}
@@ -344,8 +318,9 @@ func deleteQuestion(db *sql.DB, id int64) error {
 	return nil
 }
 
-func insertLikes(db *sql.DB, userId string, questionId int64) error {
-	stmt, err := db.Prepare("INSERT INTO likes(user_id, question_id) VALUES (?, ?)")
+func addQuestionLikes(db *sql.DB, questionId int64) error {
+	//stmt, err := db.Prepare("INSERT INTO likes(user_id, question_id) VALUES (?, ?)")
+	stmt, err := db.Prepare("UPDATE question SET likes = likes + 1 WHERE id = ?")
 	if err != nil {
 		return err
 	}
@@ -356,7 +331,7 @@ func insertLikes(db *sql.DB, userId string, questionId int64) error {
 		return err
 	}
 
-	_, err = tx.Stmt(stmt).Exec(userId, questionId)
+	_, err = tx.Stmt(stmt).Exec(questionId)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -366,8 +341,9 @@ func insertLikes(db *sql.DB, userId string, questionId int64) error {
 	return nil
 }
 
-func deleteLikes(db *sql.DB, userId string, questionId int64) error {
-	stmt, err := db.Prepare("DELETE FROM likes WHERE user_id = ? AND question_id = ?")
+func subQuestionLikes(db *sql.DB, questionId int64) error {
+	//stmt, err := db.Prepare("DELETE FROM likes WHERE user_id = ? AND question_id = ?")
+	stmt, err := db.Prepare("UPDATE question SET likes = likes - 1 WHERE id = ?")
 	if err != nil {
 		return err
 	}
@@ -378,7 +354,7 @@ func deleteLikes(db *sql.DB, userId string, questionId int64) error {
 		return err
 	}
 
-	_, err = tx.Stmt(stmt).Exec(userId, questionId)
+	_, err = tx.Stmt(stmt).Exec(questionId)
 	if err != nil {
 		tx.Rollback()
 		return err
