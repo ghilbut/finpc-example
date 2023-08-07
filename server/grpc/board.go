@@ -50,12 +50,12 @@ func (b *Board) DeleteSubject(ctx context.Context, subjectId *SubjectId) (*empty
 	return nil, nil
 }
 
-func (b *Board) GetSubjectList(ctx context.Context, empty *emptypb.Empty) (*SubjectList, error) {
+func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*SubjectList, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	rows, err := db.Query("SELECT id, title FROM subject ORDER BY id;")
 	if err != nil {
-		log.Errorf("GetSubjectList: %s", err)
+		log.Errorf("ListSubject: %s", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -67,7 +67,7 @@ func (b *Board) GetSubjectList(ctx context.Context, empty *emptypb.Empty) (*Subj
 		var title string
 
 		if err := rows.Scan(&id, title); err != nil {
-			log.Fatalf("GetSubjectList: %s", err)
+			log.Fatalf("ListSubject: %s", err)
 		}
 
 		list = append(list, &Subject{
@@ -120,12 +120,12 @@ func (b *Board) DeleteQuestion(ctx context.Context, questionId *QuestionId) (*em
 	return nil, nil
 }
 
-func (b *Board) GetQuestionList(ctx context.Context, subjectId *SubjectId) (*QuestionList, error) {
+func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*QuestionList, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	rows, err := db.Query("SELECT id, question, likes FROM question WHERE subject_id = ? ORDER BY likes DESC;", subjectId)
 	if err != nil {
-		log.Errorf("GetQuestionList: %s", err)
+		log.Errorf("ListQuestion: %s", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -138,7 +138,7 @@ func (b *Board) GetQuestionList(ctx context.Context, subjectId *SubjectId) (*Que
 		var likes int64
 
 		if err := rows.Scan(&id, &question, &likes); err != nil {
-			log.Fatalf("GetQuestionList: %s", err)
+			log.Fatalf("ListQuestion: %s", err)
 		}
 
 		list = append(list, &Question{
@@ -174,22 +174,22 @@ func (b *Board) GetQuestion(ctx context.Context, questionId *QuestionId) (*Quest
 	return question, nil
 }
 
-func (b *Board) LikeQuestion(ctx context.Context, questionId *QuestionId) (*emptypb.Empty, error) {
+func (b *Board) PostLikes(ctx context.Context, likes *Likes) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	if err := addQuestionLikes(db, questionId.Id); err != nil {
-		log.Errorf("LikeQuestion: %s", err)
+	if err := insertLikes(db, likes.UserId, likes.QuestionId); err != nil {
+		log.Errorf("PostLikes: %s", err)
 		return nil, err
 	}
 
 	return nil, nil
 }
 
-func (b *Board) LikeQuestionCancel(ctx context.Context, questionId *QuestionId) (*emptypb.Empty, error) {
+func (b *Board) DeleteLikes(ctx context.Context, likes *Likes) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	if err := subQuestionLikes(db, questionId.Id); err != nil {
-		log.Errorf("LikeQuestionCancel: %s", err)
+	if err := subQuestionLikes(db, likes.UserId, likes.QuestionId); err != nil {
+		log.Errorf("DeleteLikes: %s", err)
 		return nil, err
 	}
 
@@ -325,8 +325,8 @@ func deleteQuestion(db *sql.DB, id int64) error {
 	return nil
 }
 
-func addQuestionLikes(db *sql.DB, id int64) error {
-	stmt, err := db.Prepare("UPDATE question SET likes = likes + 1 WHERE id = ?;")
+func insertLikes(db *sql.DB, userId string, questionId int64) error {
+	stmt, err := db.Prepare("INSERT INTO likes(user_id, question_id) VALUES (?, ?)")
 	if err != nil {
 		return err
 	}
@@ -337,7 +337,7 @@ func addQuestionLikes(db *sql.DB, id int64) error {
 		return err
 	}
 
-	_, err = tx.Stmt(stmt).Exec(id)
+	_, err = tx.Stmt(stmt).Exec(userId, questionId)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -347,8 +347,8 @@ func addQuestionLikes(db *sql.DB, id int64) error {
 	return nil
 }
 
-func subQuestionLikes(db *sql.DB, id int64) error {
-	stmt, err := db.Prepare("UPDATE question SET likes = likes - 1 WHERE id = ?;")
+func subQuestionLikes(db *sql.DB, userId string, questionId int64) error {
+	stmt, err := db.Prepare("DELETE FROM likes WHERE user_id = ? AND question_id = ?")
 	if err != nil {
 		return err
 	}
@@ -359,7 +359,7 @@ func subQuestionLikes(db *sql.DB, id int64) error {
 		return err
 	}
 
-	_, err = tx.Stmt(stmt).Exec(id)
+	_, err = tx.Stmt(stmt).Exec(userId, questionId)
 	if err != nil {
 		tx.Rollback()
 		return err

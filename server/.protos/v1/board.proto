@@ -7,20 +7,25 @@ import "google/protobuf/empty.proto";
 option go_package = "github.com/ghilbut/finpc/grpc";
 
 service Board {
-  rpc PostSubject (newSubject) returns (Subject);
+  rpc PostSubject (NewSubject) returns (Subject);
   rpc DeleteSubject (SubjectId) returns (google.protobuf.Empty);
-  rpc GetSubjectList (google.protobuf.Empty) returns (SubjectList);
+  rpc ListSubject (google.protobuf.Empty) returns (SubjectList);
 
-  rpc PostQuestion (newQuestion) returns (Question);
+  rpc PostQuestion (NewQuestion) returns (Question);
   rpc DeleteQuestion (QuestionId) returns (google.protobuf.Empty);
-  rpc GetQuestionList (SubjectId) returns (QuestionList);
+  rpc ListQuestion (SubjectId) returns (QuestionList);
   rpc GetQuestion (QuestionId) returns (Question);
 
-  rpc LikeQuestion (QuestionId) returns (google.protobuf.Empty);
-  rpc LikeQuestionCancel (QuestionId) returns (google.protobuf.Empty);
+  rpc PostLikes (Likes) returns (google.protobuf.Empty);
+  rpc DeleteLikes (Likes) returns (google.protobuf.Empty);
 }
 
-message newSubject {
+message Likes {
+  string user_id = 1;
+  int64 question_id = 2;
+}
+
+message NewSubject {
   string title = 1;
 }
 
@@ -33,7 +38,7 @@ message SubjectId {
   int64 id = 1;
 }
 
-message newQuestion {
+message NewQuestion {
   string question = 1;
   int64 subject_id = 2;
 }

@@ -25,13 +25,13 @@ const _ = grpc.SupportPackageIsVersion7
 type BoardClient interface {
 	PostSubject(ctx context.Context, in *NewSubject, opts ...grpc.CallOption) (*Subject, error)
 	DeleteSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetSubjectList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error)
+	ListSubject(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error)
 	PostQuestion(ctx context.Context, in *NewQuestion, opts ...grpc.CallOption) (*Question, error)
 	DeleteQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetQuestionList(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error)
+	ListQuestion(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error)
 	GetQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*Question, error)
-	LikeQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	LikeQuestionCancel(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	PostLikes(ctx context.Context, in *Likes, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeleteLikes(ctx context.Context, in *Likes, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type boardClient struct {
@@ -60,9 +60,9 @@ func (c *boardClient) DeleteSubject(ctx context.Context, in *SubjectId, opts ...
 	return out, nil
 }
 
-func (c *boardClient) GetSubjectList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error) {
+func (c *boardClient) ListSubject(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error) {
 	out := new(SubjectList)
-	err := c.cc.Invoke(ctx, "/board.Board/GetSubjectList", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/board.Board/ListSubject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,9 +87,9 @@ func (c *boardClient) DeleteQuestion(ctx context.Context, in *QuestionId, opts .
 	return out, nil
 }
 
-func (c *boardClient) GetQuestionList(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error) {
+func (c *boardClient) ListQuestion(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error) {
 	out := new(QuestionList)
-	err := c.cc.Invoke(ctx, "/board.Board/GetQuestionList", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/board.Board/ListQuestion", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,18 +105,18 @@ func (c *boardClient) GetQuestion(ctx context.Context, in *QuestionId, opts ...g
 	return out, nil
 }
 
-func (c *boardClient) LikeQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *boardClient) PostLikes(ctx context.Context, in *Likes, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/board.Board/LikeQuestion", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/board.Board/PostLikes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *boardClient) LikeQuestionCancel(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *boardClient) DeleteLikes(ctx context.Context, in *Likes, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/board.Board/LikeQuestionCancel", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/board.Board/DeleteLikes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,13 +129,13 @@ func (c *boardClient) LikeQuestionCancel(ctx context.Context, in *QuestionId, op
 type BoardServer interface {
 	PostSubject(context.Context, *NewSubject) (*Subject, error)
 	DeleteSubject(context.Context, *SubjectId) (*emptypb.Empty, error)
-	GetSubjectList(context.Context, *emptypb.Empty) (*SubjectList, error)
+	ListSubject(context.Context, *emptypb.Empty) (*SubjectList, error)
 	PostQuestion(context.Context, *NewQuestion) (*Question, error)
 	DeleteQuestion(context.Context, *QuestionId) (*emptypb.Empty, error)
-	GetQuestionList(context.Context, *SubjectId) (*QuestionList, error)
+	ListQuestion(context.Context, *SubjectId) (*QuestionList, error)
 	GetQuestion(context.Context, *QuestionId) (*Question, error)
-	LikeQuestion(context.Context, *QuestionId) (*emptypb.Empty, error)
-	LikeQuestionCancel(context.Context, *QuestionId) (*emptypb.Empty, error)
+	PostLikes(context.Context, *Likes) (*emptypb.Empty, error)
+	DeleteLikes(context.Context, *Likes) (*emptypb.Empty, error)
 	mustEmbedUnimplementedBoardServer()
 }
 
@@ -149,8 +149,8 @@ func (UnimplementedBoardServer) PostSubject(context.Context, *NewSubject) (*Subj
 func (UnimplementedBoardServer) DeleteSubject(context.Context, *SubjectId) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSubject not implemented")
 }
-func (UnimplementedBoardServer) GetSubjectList(context.Context, *emptypb.Empty) (*SubjectList, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSubjectList not implemented")
+func (UnimplementedBoardServer) ListSubject(context.Context, *emptypb.Empty) (*SubjectList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSubject not implemented")
 }
 func (UnimplementedBoardServer) PostQuestion(context.Context, *NewQuestion) (*Question, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostQuestion not implemented")
@@ -158,17 +158,17 @@ func (UnimplementedBoardServer) PostQuestion(context.Context, *NewQuestion) (*Qu
 func (UnimplementedBoardServer) DeleteQuestion(context.Context, *QuestionId) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteQuestion not implemented")
 }
-func (UnimplementedBoardServer) GetQuestionList(context.Context, *SubjectId) (*QuestionList, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetQuestionList not implemented")
+func (UnimplementedBoardServer) ListQuestion(context.Context, *SubjectId) (*QuestionList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListQuestion not implemented")
 }
 func (UnimplementedBoardServer) GetQuestion(context.Context, *QuestionId) (*Question, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetQuestion not implemented")
 }
-func (UnimplementedBoardServer) LikeQuestion(context.Context, *QuestionId) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LikeQuestion not implemented")
+func (UnimplementedBoardServer) PostLikes(context.Context, *Likes) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostLikes not implemented")
 }
-func (UnimplementedBoardServer) LikeQuestionCancel(context.Context, *QuestionId) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LikeQuestionCancel not implemented")
+func (UnimplementedBoardServer) DeleteLikes(context.Context, *Likes) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteLikes not implemented")
 }
 func (UnimplementedBoardServer) mustEmbedUnimplementedBoardServer() {}
 
@@ -219,20 +219,20 @@ func _Board_DeleteSubject_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Board_GetSubjectList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Board_ListSubject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BoardServer).GetSubjectList(ctx, in)
+		return srv.(BoardServer).ListSubject(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/board.Board/GetSubjectList",
+		FullMethod: "/board.Board/ListSubject",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BoardServer).GetSubjectList(ctx, req.(*emptypb.Empty))
+		return srv.(BoardServer).ListSubject(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -273,20 +273,20 @@ func _Board_DeleteQuestion_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Board_GetQuestionList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Board_ListQuestion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SubjectId)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BoardServer).GetQuestionList(ctx, in)
+		return srv.(BoardServer).ListQuestion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/board.Board/GetQuestionList",
+		FullMethod: "/board.Board/ListQuestion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BoardServer).GetQuestionList(ctx, req.(*SubjectId))
+		return srv.(BoardServer).ListQuestion(ctx, req.(*SubjectId))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -309,38 +309,38 @@ func _Board_GetQuestion_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Board_LikeQuestion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QuestionId)
+func _Board_PostLikes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Likes)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BoardServer).LikeQuestion(ctx, in)
+		return srv.(BoardServer).PostLikes(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/board.Board/LikeQuestion",
+		FullMethod: "/board.Board/PostLikes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BoardServer).LikeQuestion(ctx, req.(*QuestionId))
+		return srv.(BoardServer).PostLikes(ctx, req.(*Likes))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Board_LikeQuestionCancel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QuestionId)
+func _Board_DeleteLikes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Likes)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BoardServer).LikeQuestionCancel(ctx, in)
+		return srv.(BoardServer).DeleteLikes(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/board.Board/LikeQuestionCancel",
+		FullMethod: "/board.Board/DeleteLikes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BoardServer).LikeQuestionCancel(ctx, req.(*QuestionId))
+		return srv.(BoardServer).DeleteLikes(ctx, req.(*Likes))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -361,8 +361,8 @@ var Board_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Board_DeleteSubject_Handler,
 		},
 		{
-			MethodName: "GetSubjectList",
-			Handler:    _Board_GetSubjectList_Handler,
+			MethodName: "ListSubject",
+			Handler:    _Board_ListSubject_Handler,
 		},
 		{
 			MethodName: "PostQuestion",
@@ -373,20 +373,20 @@ var Board_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Board_DeleteQuestion_Handler,
 		},
 		{
-			MethodName: "GetQuestionList",
-			Handler:    _Board_GetQuestionList_Handler,
+			MethodName: "ListQuestion",
+			Handler:    _Board_ListQuestion_Handler,
 		},
 		{
 			MethodName: "GetQuestion",
 			Handler:    _Board_GetQuestion_Handler,
 		},
 		{
-			MethodName: "LikeQuestion",
-			Handler:    _Board_LikeQuestion_Handler,
+			MethodName: "PostLikes",
+			Handler:    _Board_PostLikes_Handler,
 		},
 		{
-			MethodName: "LikeQuestionCancel",
-			Handler:    _Board_LikeQuestionCancel_Handler,
+			MethodName: "DeleteLikes",
+			Handler:    _Board_DeleteLikes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
