@@ -1,6 +1,7 @@
-import { credentials } from "@grpc/grpc-js";
-import { procedure, router } from '../trpc'
-import { Stock, TradingClient } from "~/grpc/trading";
+import { credentials } from '@grpc/grpc-js';
+import { z } from 'zod';
+import { Stock, TradingClient } from '~/grpc/trading';
+import { procedure, router } from '../trpc';
 
 const host = process.env.GRPC_HOST || '127.0.0.1';
 const port = process.env.GRPC_PORT || '9095';
@@ -21,6 +22,70 @@ console.log('GRPC_OPTIONS: ', opts);
 const trading = new TradingClient(`${host}:${port}`, creds, opts);
 
 export const appRouter = router({
+    listSubjects: procedure.query(() => {
+        return [
+            { id: 1, title: 'subject #1' },
+            { id: 2, title: 'subject #2' },
+            { id: 3, title: 'subject #3' },
+            { id: 4, title: 'subject #4' },
+        ];
+    }),
+
+    getSubject: procedure.input(
+        z.object({
+            id: z.number(),
+        })
+    ).query(async ({ input }) => {
+        return { id: input.id, title: `subject #1` };
+    }),
+
+    createSubject: procedure.input(z.object({
+        id: z.number(),
+        title: z.string(),
+    })).mutation(async ({ input }) => {
+
+    }),
+
+    deleteSubject: procedure.input(z.object({
+        id: z.number(),
+    })).mutation(async ({ input }) => {
+
+    }),
+
+    listQuestions: procedure.query(async ({ input }) => {
+        return [
+            { id: 1, question: 'question #1' },
+            { id: 2, question: 'question #2' },
+            { id: 3, question: 'question #3' },
+            { id: 4, question: 'question #4' },
+        ];
+    }),
+
+    createQuestion: procedure.input(z.object({
+        id: z.number(),
+        title: z.string(),
+    })).mutation(async ({ input }) => {
+
+    }),
+
+    deleteQuestion: procedure.input(z.object({
+        id: z.number(),
+    })).mutation(async ({ input }) => {
+
+    }),
+
+    like: procedure.input(z.object({
+        id: z.number(),
+    })).mutation(async ({ input }) => {
+
+    }),
+
+    unlike: procedure.input(z.object({
+        id: z.number(),
+    })).mutation(async ({ input }) => {
+
+    }),
+
     getStockList: procedure.query(async (): Promise<Stock[]> => {
         const stocks: Promise<Stock[]> = new Promise((resolve, reject) => {
             trading.getStockList({}, (err, stockListResp) => {
