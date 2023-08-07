@@ -668,8 +668,8 @@ export const QuestionId = {
 
 export type BoardService = typeof BoardService;
 export const BoardService = {
-  postSubject: {
-    path: "/board.Board/PostSubject",
+  createSubject: {
+    path: "/board.Board/CreateSubject",
     requestStream: false,
     responseStream: false,
     requestSerialize: (value: NewSubject) => Buffer.from(NewSubject.encode(value).finish()),
@@ -695,8 +695,8 @@ export const BoardService = {
     responseSerialize: (value: SubjectList) => Buffer.from(SubjectList.encode(value).finish()),
     responseDeserialize: (value: Buffer) => SubjectList.decode(value),
   },
-  postQuestion: {
-    path: "/board.Board/PostQuestion",
+  createQuestion: {
+    path: "/board.Board/CreateQuestion",
     requestStream: false,
     responseStream: false,
     requestSerialize: (value: NewQuestion) => Buffer.from(NewQuestion.encode(value).finish()),
@@ -713,15 +713,6 @@ export const BoardService = {
     responseSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Empty.decode(value),
   },
-  listQuestion: {
-    path: "/board.Board/ListQuestion",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: SubjectId) => Buffer.from(SubjectId.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => SubjectId.decode(value),
-    responseSerialize: (value: QuestionList) => Buffer.from(QuestionList.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => QuestionList.decode(value),
-  },
   getQuestion: {
     path: "/board.Board/GetQuestion",
     requestStream: false,
@@ -731,8 +722,17 @@ export const BoardService = {
     responseSerialize: (value: Question) => Buffer.from(Question.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Question.decode(value),
   },
-  postLikes: {
-    path: "/board.Board/PostLikes",
+  listQuestion: {
+    path: "/board.Board/ListQuestion",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: SubjectId) => Buffer.from(SubjectId.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => SubjectId.decode(value),
+    responseSerialize: (value: QuestionList) => Buffer.from(QuestionList.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => QuestionList.decode(value),
+  },
+  like: {
+    path: "/board.Board/Like",
     requestStream: false,
     responseStream: false,
     requestSerialize: (value: Likes) => Buffer.from(Likes.encode(value).finish()),
@@ -740,8 +740,8 @@ export const BoardService = {
     responseSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Empty.decode(value),
   },
-  deleteLikes: {
-    path: "/board.Board/DeleteLikes",
+  unlike: {
+    path: "/board.Board/Unlike",
     requestStream: false,
     responseStream: false,
     requestSerialize: (value: Likes) => Buffer.from(Likes.encode(value).finish()),
@@ -752,25 +752,28 @@ export const BoardService = {
 } as const;
 
 export interface BoardServer extends UntypedServiceImplementation {
-  postSubject: handleUnaryCall<NewSubject, Subject>;
+  createSubject: handleUnaryCall<NewSubject, Subject>;
   deleteSubject: handleUnaryCall<SubjectId, Empty>;
   listSubject: handleUnaryCall<Empty, SubjectList>;
-  postQuestion: handleUnaryCall<NewQuestion, Question>;
+  createQuestion: handleUnaryCall<NewQuestion, Question>;
   deleteQuestion: handleUnaryCall<QuestionId, Empty>;
-  listQuestion: handleUnaryCall<SubjectId, QuestionList>;
   getQuestion: handleUnaryCall<QuestionId, Question>;
-  postLikes: handleUnaryCall<Likes, Empty>;
-  deleteLikes: handleUnaryCall<Likes, Empty>;
+  listQuestion: handleUnaryCall<SubjectId, QuestionList>;
+  like: handleUnaryCall<Likes, Empty>;
+  unlike: handleUnaryCall<Likes, Empty>;
 }
 
 export interface BoardClient extends Client {
-  postSubject(request: NewSubject, callback: (error: ServiceError | null, response: Subject) => void): ClientUnaryCall;
-  postSubject(
+  createSubject(
+    request: NewSubject,
+    callback: (error: ServiceError | null, response: Subject) => void,
+  ): ClientUnaryCall;
+  createSubject(
     request: NewSubject,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Subject) => void,
   ): ClientUnaryCall;
-  postSubject(
+  createSubject(
     request: NewSubject,
     metadata: Metadata,
     options: Partial<CallOptions>,
@@ -800,16 +803,16 @@ export interface BoardClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: SubjectList) => void,
   ): ClientUnaryCall;
-  postQuestion(
+  createQuestion(
     request: NewQuestion,
     callback: (error: ServiceError | null, response: Question) => void,
   ): ClientUnaryCall;
-  postQuestion(
+  createQuestion(
     request: NewQuestion,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Question) => void,
   ): ClientUnaryCall;
-  postQuestion(
+  createQuestion(
     request: NewQuestion,
     metadata: Metadata,
     options: Partial<CallOptions>,
@@ -827,21 +830,6 @@ export interface BoardClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  listQuestion(
-    request: SubjectId,
-    callback: (error: ServiceError | null, response: QuestionList) => void,
-  ): ClientUnaryCall;
-  listQuestion(
-    request: SubjectId,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: QuestionList) => void,
-  ): ClientUnaryCall;
-  listQuestion(
-    request: SubjectId,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: QuestionList) => void,
-  ): ClientUnaryCall;
   getQuestion(request: QuestionId, callback: (error: ServiceError | null, response: Question) => void): ClientUnaryCall;
   getQuestion(
     request: QuestionId,
@@ -854,25 +842,40 @@ export interface BoardClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Question) => void,
   ): ClientUnaryCall;
-  postLikes(request: Likes, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
-  postLikes(
+  listQuestion(
+    request: SubjectId,
+    callback: (error: ServiceError | null, response: QuestionList) => void,
+  ): ClientUnaryCall;
+  listQuestion(
+    request: SubjectId,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: QuestionList) => void,
+  ): ClientUnaryCall;
+  listQuestion(
+    request: SubjectId,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: QuestionList) => void,
+  ): ClientUnaryCall;
+  like(request: Likes, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
+  like(
     request: Likes,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  postLikes(
+  like(
     request: Likes,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  deleteLikes(request: Likes, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
-  deleteLikes(
+  unlike(request: Likes, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
+  unlike(
     request: Likes,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  deleteLikes(
+  unlike(
     request: Likes,
     metadata: Metadata,
     options: Partial<CallOptions>,
