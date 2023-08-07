@@ -123,19 +123,10 @@ func (b *Board) DeleteQuestion(ctx context.Context, questionId *QuestionId) (*em
 func (b *Board) GetQuestion(ctx context.Context, questionId *QuestionId) (*Question, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	rows, err := db.Query("SELECT id, question, likes FROM question WHERE id = ?;", questionId)
+	question, err := selectQuestion(db, questionId.Id)
 	if err != nil {
 		log.Errorf("GetQuestion: %s", err)
 		return nil, err
-	}
-	defer rows.Close()
-
-	question := &Question{}
-
-	for rows.Next() {
-		if err := rows.Scan(&question.Id, &question.Question, &question.LikesCount); err != nil {
-			log.Fatalf("GetQuestion: %s", err)
-		}
 	}
 
 	return question, nil
@@ -144,28 +135,43 @@ func (b *Board) GetQuestion(ctx context.Context, questionId *QuestionId) (*Quest
 func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*QuestionList, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	rows, err := db.Query("SELECT id, question, likes FROM question WHERE subject_id = ? ORDER BY likes DESC;", subjectId)
+	likesRows, err := db.Query("SELECT question_id, COUNT(*) AS count FROM likes WHERE subject_id = ? GROUP BY question_id ORDER BY count DESC;", subjectId)
 	if err != nil {
 		log.Errorf("ListQuestion: %s", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer likesRows.Close()
 
 	var list []*Question
 
-	for rows.Next() {
+	for likesRows.Next() {
 		var id int64
 		var question string
-		var likes int64
+		var likesCount int64
 
-		if err := rows.Scan(&id, &question, &likes); err != nil {
-			log.Fatalf("ListQuestion: %s", err)
+		if err := likesRows.Scan(&id, &likesCount); err != nil {
+			log.Errorf("ListQuestion: %s", err)
+			return nil, err
 		}
+
+		questionRows, err := db.Query("SELECT question FROM question WHERE id = ?;", id)
+		if err != nil {
+			log.Errorf("ListQuestion: %s", err)
+			return nil, err
+		}
+
+		for questionRows.Next() {
+			if err := questionRows.Scan(&question); err != nil {
+				log.Errorf("ListQuestion: %s", err)
+				return nil, err
+			}
+		}
+		questionRows.Close()
 
 		list = append(list, &Question{
 			Id:         id,
 			Question:   question,
-			LikesCount: likes,
+			LikesCount: likesCount,
 		})
 	}
 
@@ -188,7 +194,7 @@ func (b *Board) Like(ctx context.Context, likes *Likes) (*emptypb.Empty, error) 
 func (b *Board) Unlike(ctx context.Context, likes *Likes) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	if err := subQuestionLikes(db, likes.UserId, likes.QuestionId); err != nil {
+	if err := deleteLikes(db, likes.UserId, likes.QuestionId); err != nil {
 		log.Errorf("Unlike: %s", err)
 		return nil, err
 	}
@@ -286,7 +292,7 @@ func insertQuestion(db *sql.DB, question string, subjectId int64) (int64, error)
 }
 
 func selectQuestion(db *sql.DB, id int64) (*Question, error) {
-	rows, err := db.Query("SELECT id, question, likes FROM question WHERE id = '?'", id)
+	rows, err := db.Query("SELECT id, question FROM question WHERE id = '?'", id)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +301,19 @@ func selectQuestion(db *sql.DB, id int64) (*Question, error) {
 	question := &Question{}
 
 	for rows.Next() {
-		if err := rows.Scan(&question.Id, &question.Question, &question.LikesCount); err != nil {
+		if err := rows.Scan(&question.Id, &question.Question); err != nil {
+			return nil, err
+		}
+	}
+
+	rows, err = db.Query("SELECT COUNT(*) FROM likes WHERE question_id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(&question.LikesCount); err != nil {
 			return nil, err
 		}
 	}
@@ -347,7 +365,7 @@ func insertLikes(db *sql.DB, userId string, questionId int64) error {
 	return nil
 }
 
-func subQuestionLikes(db *sql.DB, userId string, questionId int64) error {
+func deleteLikes(db *sql.DB, userId string, questionId int64) error {
 	stmt, err := db.Prepare("DELETE FROM likes WHERE user_id = ? AND question_id = ?")
 	if err != nil {
 		return err
