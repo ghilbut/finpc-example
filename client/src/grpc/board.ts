@@ -17,7 +17,12 @@ import { Empty } from "./google/protobuf/empty";
 
 export const protobufPackage = "board";
 
-export interface newSubject {
+export interface Likes {
+  userId: string;
+  questionId: number;
+}
+
+export interface NewSubject {
   title: string;
 }
 
@@ -30,7 +35,7 @@ export interface SubjectId {
   id: number;
 }
 
-export interface newQuestion {
+export interface NewQuestion {
   question: string;
   subjectId: number;
 }
@@ -53,22 +58,97 @@ export interface QuestionId {
   id: number;
 }
 
-function createBasenewSubject(): newSubject {
+function createBaseLikes(): Likes {
+  return { userId: "", questionId: 0 };
+}
+
+export const Likes = {
+  encode(message: Likes, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
+    }
+    if (message.questionId !== 0) {
+      writer.uint32(16).int64(message.questionId);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): Likes {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLikes();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.questionId = longToNumber(reader.int64() as Long);
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Likes {
+    return {
+      userId: isSet(object.userId) ? String(object.userId) : "",
+      questionId: isSet(object.questionId) ? Number(object.questionId) : 0,
+    };
+  },
+
+  toJSON(message: Likes): unknown {
+    const obj: any = {};
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.questionId !== 0) {
+      obj.questionId = Math.round(message.questionId);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<Likes>, I>>(base?: I): Likes {
+    return Likes.fromPartial(base ?? {});
+  },
+
+  fromPartial<I extends Exact<DeepPartial<Likes>, I>>(object: I): Likes {
+    const message = createBaseLikes();
+    message.userId = object.userId ?? "";
+    message.questionId = object.questionId ?? 0;
+    return message;
+  },
+};
+
+function createBaseNewSubject(): NewSubject {
   return { title: "" };
 }
 
-export const newSubject = {
-  encode(message: newSubject, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const NewSubject = {
+  encode(message: NewSubject, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.title !== "") {
       writer.uint32(10).string(message.title);
     }
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): newSubject {
+  decode(input: _m0.Reader | Uint8Array, length?: number): NewSubject {
     const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasenewSubject();
+    const message = createBaseNewSubject();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -88,11 +168,11 @@ export const newSubject = {
     return message;
   },
 
-  fromJSON(object: any): newSubject {
+  fromJSON(object: any): NewSubject {
     return { title: isSet(object.title) ? String(object.title) : "" };
   },
 
-  toJSON(message: newSubject): unknown {
+  toJSON(message: NewSubject): unknown {
     const obj: any = {};
     if (message.title !== "") {
       obj.title = message.title;
@@ -100,12 +180,12 @@ export const newSubject = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<newSubject>, I>>(base?: I): newSubject {
-    return newSubject.fromPartial(base ?? {});
+  create<I extends Exact<DeepPartial<NewSubject>, I>>(base?: I): NewSubject {
+    return NewSubject.fromPartial(base ?? {});
   },
 
-  fromPartial<I extends Exact<DeepPartial<newSubject>, I>>(object: I): newSubject {
-    const message = createBasenewSubject();
+  fromPartial<I extends Exact<DeepPartial<NewSubject>, I>>(object: I): NewSubject {
+    const message = createBaseNewSubject();
     message.title = object.title ?? "";
     return message;
   },
@@ -241,12 +321,12 @@ export const SubjectId = {
   },
 };
 
-function createBasenewQuestion(): newQuestion {
+function createBaseNewQuestion(): NewQuestion {
   return { question: "", subjectId: 0 };
 }
 
-export const newQuestion = {
-  encode(message: newQuestion, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const NewQuestion = {
+  encode(message: NewQuestion, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.question !== "") {
       writer.uint32(10).string(message.question);
     }
@@ -256,10 +336,10 @@ export const newQuestion = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): newQuestion {
+  decode(input: _m0.Reader | Uint8Array, length?: number): NewQuestion {
     const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasenewQuestion();
+    const message = createBaseNewQuestion();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -286,14 +366,14 @@ export const newQuestion = {
     return message;
   },
 
-  fromJSON(object: any): newQuestion {
+  fromJSON(object: any): NewQuestion {
     return {
       question: isSet(object.question) ? String(object.question) : "",
       subjectId: isSet(object.subjectId) ? Number(object.subjectId) : 0,
     };
   },
 
-  toJSON(message: newQuestion): unknown {
+  toJSON(message: NewQuestion): unknown {
     const obj: any = {};
     if (message.question !== "") {
       obj.question = message.question;
@@ -304,12 +384,12 @@ export const newQuestion = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<newQuestion>, I>>(base?: I): newQuestion {
-    return newQuestion.fromPartial(base ?? {});
+  create<I extends Exact<DeepPartial<NewQuestion>, I>>(base?: I): NewQuestion {
+    return NewQuestion.fromPartial(base ?? {});
   },
 
-  fromPartial<I extends Exact<DeepPartial<newQuestion>, I>>(object: I): newQuestion {
-    const message = createBasenewQuestion();
+  fromPartial<I extends Exact<DeepPartial<NewQuestion>, I>>(object: I): NewQuestion {
+    const message = createBaseNewQuestion();
     message.question = object.question ?? "";
     message.subjectId = object.subjectId ?? 0;
     return message;
@@ -592,8 +672,8 @@ export const BoardService = {
     path: "/board.Board/PostSubject",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: newSubject) => Buffer.from(newSubject.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => newSubject.decode(value),
+    requestSerialize: (value: NewSubject) => Buffer.from(NewSubject.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => NewSubject.decode(value),
     responseSerialize: (value: Subject) => Buffer.from(Subject.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Subject.decode(value),
   },
@@ -606,8 +686,8 @@ export const BoardService = {
     responseSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Empty.decode(value),
   },
-  getSubjectList: {
-    path: "/board.Board/GetSubjectList",
+  listSubject: {
+    path: "/board.Board/ListSubject",
     requestStream: false,
     responseStream: false,
     requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
@@ -619,8 +699,8 @@ export const BoardService = {
     path: "/board.Board/PostQuestion",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: newQuestion) => Buffer.from(newQuestion.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => newQuestion.decode(value),
+    requestSerialize: (value: NewQuestion) => Buffer.from(NewQuestion.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => NewQuestion.decode(value),
     responseSerialize: (value: Question) => Buffer.from(Question.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Question.decode(value),
   },
@@ -633,8 +713,8 @@ export const BoardService = {
     responseSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Empty.decode(value),
   },
-  getQuestionList: {
-    path: "/board.Board/GetQuestionList",
+  listQuestion: {
+    path: "/board.Board/ListQuestion",
     requestStream: false,
     responseStream: false,
     requestSerialize: (value: SubjectId) => Buffer.from(SubjectId.encode(value).finish()),
@@ -651,47 +731,47 @@ export const BoardService = {
     responseSerialize: (value: Question) => Buffer.from(Question.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Question.decode(value),
   },
-  likeQuestion: {
-    path: "/board.Board/LikeQuestion",
+  postLikes: {
+    path: "/board.Board/PostLikes",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: QuestionId) => Buffer.from(QuestionId.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => QuestionId.decode(value),
+    requestSerialize: (value: Likes) => Buffer.from(Likes.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => Likes.decode(value),
     responseSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Empty.decode(value),
   },
-  likeQuestionCancel: {
-    path: "/board.Board/LikeQuestionCancel",
+  deleteLikes: {
+    path: "/board.Board/DeleteLikes",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: QuestionId) => Buffer.from(QuestionId.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => QuestionId.decode(value),
+    requestSerialize: (value: Likes) => Buffer.from(Likes.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => Likes.decode(value),
     responseSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Empty.decode(value),
   },
 } as const;
 
 export interface BoardServer extends UntypedServiceImplementation {
-  postSubject: handleUnaryCall<newSubject, Subject>;
+  postSubject: handleUnaryCall<NewSubject, Subject>;
   deleteSubject: handleUnaryCall<SubjectId, Empty>;
-  getSubjectList: handleUnaryCall<Empty, SubjectList>;
-  postQuestion: handleUnaryCall<newQuestion, Question>;
+  listSubject: handleUnaryCall<Empty, SubjectList>;
+  postQuestion: handleUnaryCall<NewQuestion, Question>;
   deleteQuestion: handleUnaryCall<QuestionId, Empty>;
-  getQuestionList: handleUnaryCall<SubjectId, QuestionList>;
+  listQuestion: handleUnaryCall<SubjectId, QuestionList>;
   getQuestion: handleUnaryCall<QuestionId, Question>;
-  likeQuestion: handleUnaryCall<QuestionId, Empty>;
-  likeQuestionCancel: handleUnaryCall<QuestionId, Empty>;
+  postLikes: handleUnaryCall<Likes, Empty>;
+  deleteLikes: handleUnaryCall<Likes, Empty>;
 }
 
 export interface BoardClient extends Client {
-  postSubject(request: newSubject, callback: (error: ServiceError | null, response: Subject) => void): ClientUnaryCall;
+  postSubject(request: NewSubject, callback: (error: ServiceError | null, response: Subject) => void): ClientUnaryCall;
   postSubject(
-    request: newSubject,
+    request: NewSubject,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Subject) => void,
   ): ClientUnaryCall;
   postSubject(
-    request: newSubject,
+    request: NewSubject,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Subject) => void,
@@ -708,32 +788,29 @@ export interface BoardClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  getSubjectList(
-    request: Empty,
-    callback: (error: ServiceError | null, response: SubjectList) => void,
-  ): ClientUnaryCall;
-  getSubjectList(
+  listSubject(request: Empty, callback: (error: ServiceError | null, response: SubjectList) => void): ClientUnaryCall;
+  listSubject(
     request: Empty,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: SubjectList) => void,
   ): ClientUnaryCall;
-  getSubjectList(
+  listSubject(
     request: Empty,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: SubjectList) => void,
   ): ClientUnaryCall;
   postQuestion(
-    request: newQuestion,
+    request: NewQuestion,
     callback: (error: ServiceError | null, response: Question) => void,
   ): ClientUnaryCall;
   postQuestion(
-    request: newQuestion,
+    request: NewQuestion,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Question) => void,
   ): ClientUnaryCall;
   postQuestion(
-    request: newQuestion,
+    request: NewQuestion,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Question) => void,
@@ -750,16 +827,16 @@ export interface BoardClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  getQuestionList(
+  listQuestion(
     request: SubjectId,
     callback: (error: ServiceError | null, response: QuestionList) => void,
   ): ClientUnaryCall;
-  getQuestionList(
+  listQuestion(
     request: SubjectId,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: QuestionList) => void,
   ): ClientUnaryCall;
-  getQuestionList(
+  listQuestion(
     request: SubjectId,
     metadata: Metadata,
     options: Partial<CallOptions>,
@@ -777,29 +854,26 @@ export interface BoardClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Question) => void,
   ): ClientUnaryCall;
-  likeQuestion(request: QuestionId, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
-  likeQuestion(
-    request: QuestionId,
+  postLikes(request: Likes, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
+  postLikes(
+    request: Likes,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  likeQuestion(
-    request: QuestionId,
+  postLikes(
+    request: Likes,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  likeQuestionCancel(
-    request: QuestionId,
-    callback: (error: ServiceError | null, response: Empty) => void,
-  ): ClientUnaryCall;
-  likeQuestionCancel(
-    request: QuestionId,
+  deleteLikes(request: Likes, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
+  deleteLikes(
+    request: Likes,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  likeQuestionCancel(
-    request: QuestionId,
+  deleteLikes(
+    request: Likes,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
