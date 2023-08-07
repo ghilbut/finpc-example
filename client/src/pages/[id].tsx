@@ -9,17 +9,11 @@ export default function Home() {
 
     const [ newQuestion, setNewQuestion ] = useState('');
 
-    function onNewQuestion(q) {
-
-    }
-
     const subject = trpc.getSubject.useQuery({ id: id });
     const list = trpc.listQuestions.useQuery({ id: id });
 
     const like = trpc.like.useMutation();
-    const unlike = trpc.like.useMutation();
     const createQuestion = trpc.createQuestion.useMutation();
-    const deleteQuestion = trpc.deleteQuestion.useMutation();
 
     async function doRefresh() {
         console.log('doRefresh');

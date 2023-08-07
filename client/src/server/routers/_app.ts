@@ -40,19 +40,6 @@ export const appRouter = router({
         return { id: input.id, title: `subject #${input.id}` };
     }),
 
-    createSubject: procedure.input(z.object({
-        id: z.number(),
-        title: z.string(),
-    })).mutation(async ({ input }) => {
-
-    }),
-
-    deleteSubject: procedure.input(z.object({
-        id: z.number(),
-    })).mutation(async ({ input }) => {
-
-    }),
-
     listQuestions: procedure.input(z.object({
         id: z.number(),
     })).query(async ({ input }) => {
@@ -71,19 +58,7 @@ export const appRouter = router({
 
     }),
 
-    deleteQuestion: procedure.input(z.object({
-        id: z.number(),
-    })).mutation(async ({ input }) => {
-
-    }),
-
     like: procedure.input(z.object({
-        id: z.number(),
-    })).mutation(async ({ input }) => {
-
-    }),
-
-    unlike: procedure.input(z.object({
         id: z.number(),
     })).mutation(async ({ input }) => {
 
