@@ -1,6 +1,7 @@
 import { credentials } from '@grpc/grpc-js';
 import { z } from 'zod';
 import { Stock, TradingClient } from '~/grpc/trading';
+import { BoardClient, Subject, Question } from '~/grpc/board';
 import { procedure, router } from '../trpc';
 
 const host = process.env.GRPC_HOST || '127.0.0.1';
@@ -36,7 +37,7 @@ export const appRouter = router({
             id: z.number(),
         })
     ).query(async ({ input }) => {
-        return { id: input.id, title: `subject #1` };
+        return { id: input.id, title: `subject #${input.id}` };
     }),
 
     createSubject: procedure.input(z.object({
@@ -52,12 +53,14 @@ export const appRouter = router({
 
     }),
 
-    listQuestions: procedure.query(async ({ input }) => {
+    listQuestions: procedure.input(z.object({
+        id: z.number(),
+    })).query(async ({ input }) => {
         return [
-            { id: 1, question: 'question #1' },
-            { id: 2, question: 'question #2' },
-            { id: 3, question: 'question #3' },
-            { id: 4, question: 'question #4' },
+            { id: 1, question: 'question #1', like: 0 },
+            { id: 2, question: 'question #2', like: 0 },
+            { id: 3, question: 'question #3', like: 0 },
+            { id: 4, question: 'question #4', like: 0 },
         ];
     }),
 
