@@ -30,8 +30,8 @@ type BoardClient interface {
 	DeleteQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*Question, error)
 	ListQuestion(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error)
-	Like(ctx context.Context, in *Likes, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Unlike(ctx context.Context, in *Likes, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Like(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Unlike(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type boardClient struct {
@@ -105,7 +105,7 @@ func (c *boardClient) ListQuestion(ctx context.Context, in *SubjectId, opts ...g
 	return out, nil
 }
 
-func (c *boardClient) Like(ctx context.Context, in *Likes, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *boardClient) Like(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/board.Board/Like", in, out, opts...)
 	if err != nil {
@@ -114,7 +114,7 @@ func (c *boardClient) Like(ctx context.Context, in *Likes, opts ...grpc.CallOpti
 	return out, nil
 }
 
-func (c *boardClient) Unlike(ctx context.Context, in *Likes, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *boardClient) Unlike(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/board.Board/Unlike", in, out, opts...)
 	if err != nil {
@@ -134,8 +134,8 @@ type BoardServer interface {
 	DeleteQuestion(context.Context, *QuestionId) (*emptypb.Empty, error)
 	GetQuestion(context.Context, *QuestionId) (*Question, error)
 	ListQuestion(context.Context, *SubjectId) (*QuestionList, error)
-	Like(context.Context, *Likes) (*emptypb.Empty, error)
-	Unlike(context.Context, *Likes) (*emptypb.Empty, error)
+	Like(context.Context, *QuestionId) (*emptypb.Empty, error)
+	Unlike(context.Context, *QuestionId) (*emptypb.Empty, error)
 	mustEmbedUnimplementedBoardServer()
 }
 
@@ -164,10 +164,10 @@ func (UnimplementedBoardServer) GetQuestion(context.Context, *QuestionId) (*Ques
 func (UnimplementedBoardServer) ListQuestion(context.Context, *SubjectId) (*QuestionList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListQuestion not implemented")
 }
-func (UnimplementedBoardServer) Like(context.Context, *Likes) (*emptypb.Empty, error) {
+func (UnimplementedBoardServer) Like(context.Context, *QuestionId) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Like not implemented")
 }
-func (UnimplementedBoardServer) Unlike(context.Context, *Likes) (*emptypb.Empty, error) {
+func (UnimplementedBoardServer) Unlike(context.Context, *QuestionId) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Unlike not implemented")
 }
 func (UnimplementedBoardServer) mustEmbedUnimplementedBoardServer() {}
@@ -310,7 +310,7 @@ func _Board_ListQuestion_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _Board_Like_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Likes)
+	in := new(QuestionId)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -322,13 +322,13 @@ func _Board_Like_Handler(srv interface{}, ctx context.Context, dec func(interfac
 		FullMethod: "/board.Board/Like",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BoardServer).Like(ctx, req.(*Likes))
+		return srv.(BoardServer).Like(ctx, req.(*QuestionId))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Board_Unlike_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Likes)
+	in := new(QuestionId)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -340,7 +340,7 @@ func _Board_Unlike_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/board.Board/Unlike",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BoardServer).Unlike(ctx, req.(*Likes))
+		return srv.(BoardServer).Unlike(ctx, req.(*QuestionId))
 	}
 	return interceptor(ctx, in, info, handler)
 }

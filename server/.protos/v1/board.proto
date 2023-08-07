@@ -16,8 +16,8 @@ service Board {
   rpc GetQuestion (QuestionId) returns (Question);
   rpc ListQuestion (SubjectId) returns (QuestionList);
 
-  rpc Like (Likes) returns (google.protobuf.Empty);
-  rpc Unlike (Likes) returns (google.protobuf.Empty);
+  rpc Like (QuestionId) returns (google.protobuf.Empty);
+  rpc Unlike (QuestionId) returns (google.protobuf.Empty);
 }
 
 message Likes {
