@@ -7,17 +7,17 @@ import "google/protobuf/empty.proto";
 option go_package = "github.com/ghilbut/finpc/grpc";
 
 service Board {
-  rpc PostSubject (NewSubject) returns (Subject);
+  rpc CreateSubject (NewSubject) returns (Subject);
   rpc DeleteSubject (SubjectId) returns (google.protobuf.Empty);
   rpc ListSubject (google.protobuf.Empty) returns (SubjectList);
 
-  rpc PostQuestion (NewQuestion) returns (Question);
+  rpc CreateQuestion (NewQuestion) returns (Question);
   rpc DeleteQuestion (QuestionId) returns (google.protobuf.Empty);
-  rpc ListQuestion (SubjectId) returns (QuestionList);
   rpc GetQuestion (QuestionId) returns (Question);
+  rpc ListQuestion (SubjectId) returns (QuestionList);
 
-  rpc PostLikes (Likes) returns (google.protobuf.Empty);
-  rpc DeleteLikes (Likes) returns (google.protobuf.Empty);
+  rpc Like (Likes) returns (google.protobuf.Empty);
+  rpc Unlike (Likes) returns (google.protobuf.Empty);
 }
 
 message Likes {

@@ -12,22 +12,22 @@ type Board struct {
 	BoardServer
 }
 
-func (b *Board) PostSubject(ctx context.Context, newSubject *NewSubject) (*Subject, error) {
+func (b *Board) CreateSubject(ctx context.Context, newSubject *NewSubject) (*Subject, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	if len(newSubject.GetTitle()) == 0 {
-		log.Errorf("PostSubject: invalid input 'title'")
+		log.Errorf("CreateSubject: invalid input 'title'")
 		return nil, errors.New("invalid 'title'")
 	}
 
 	if err := insertSubject(db, newSubject.Title); err != nil {
-		log.Errorf("PostSubject: %s", err)
+		log.Errorf("CreateSubject: %s", err)
 		return nil, err
 	}
 
 	subject, err := selectSubjectByTitle(db, newSubject.Title)
 	if err != nil {
-		log.Errorf("PostSubject: failed to select created subject. %s", err)
+		log.Errorf("CreateSubject: failed to select created subject. %s", err)
 		return nil, err
 	}
 
@@ -81,23 +81,23 @@ func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*Subject
 	}, nil
 }
 
-func (b *Board) PostQuestion(ctx context.Context, newQuestion *NewQuestion) (*Question, error) {
+func (b *Board) CreateQuestion(ctx context.Context, newQuestion *NewQuestion) (*Question, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	if len(newQuestion.GetQuestion()) == 0 {
-		log.Errorf("PostQuestion: empty input 'question'")
+		log.Errorf("CreateQuestion: empty input 'question'")
 		return nil, errors.New("'question' is empty")
 	}
 
 	insertedId, err := insertQuestion(db, newQuestion.Question, newQuestion.SubjectId)
 	if err != nil {
-		log.Errorf("PostQuestion: %s", err)
+		log.Errorf("CreateQuestion: %s", err)
 		return nil, err
 	}
 
 	question, err := selectQuestion(db, insertedId)
 	if err != nil {
-		log.Errorf("PostQuestion: failed to select created question. %s", err)
+		log.Errorf("CreateQuestion: failed to select created question. %s", err)
 		return nil, err
 	}
 
@@ -118,6 +118,27 @@ func (b *Board) DeleteQuestion(ctx context.Context, questionId *QuestionId) (*em
 	}
 
 	return nil, nil
+}
+
+func (b *Board) GetQuestion(ctx context.Context, questionId *QuestionId) (*Question, error) {
+	db := ctx.Value(DBSession).(*sql.DB)
+
+	rows, err := db.Query("SELECT id, question, likes FROM question WHERE id = ?;", questionId)
+	if err != nil {
+		log.Errorf("GetQuestion: %s", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	question := &Question{}
+
+	for rows.Next() {
+		if err := rows.Scan(&question.Id, &question.Question, &question.LikesCount); err != nil {
+			log.Fatalf("GetQuestion: %s", err)
+		}
+	}
+
+	return question, nil
 }
 
 func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*QuestionList, error) {
@@ -153,43 +174,22 @@ func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*Questi
 	}, nil
 }
 
-func (b *Board) GetQuestion(ctx context.Context, questionId *QuestionId) (*Question, error) {
-	db := ctx.Value(DBSession).(*sql.DB)
-
-	rows, err := db.Query("SELECT id, question, likes FROM question WHERE id = ?;", questionId)
-	if err != nil {
-		log.Errorf("GetQuestion: %s", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	question := &Question{}
-
-	for rows.Next() {
-		if err := rows.Scan(&question.Id, &question.Question, &question.LikesCount); err != nil {
-			log.Fatalf("GetQuestion: %s", err)
-		}
-	}
-
-	return question, nil
-}
-
-func (b *Board) PostLikes(ctx context.Context, likes *Likes) (*emptypb.Empty, error) {
+func (b *Board) Like(ctx context.Context, likes *Likes) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	if err := insertLikes(db, likes.UserId, likes.QuestionId); err != nil {
-		log.Errorf("PostLikes: %s", err)
+		log.Errorf("Like: %s", err)
 		return nil, err
 	}
 
 	return nil, nil
 }
 
-func (b *Board) DeleteLikes(ctx context.Context, likes *Likes) (*emptypb.Empty, error) {
+func (b *Board) Unlike(ctx context.Context, likes *Likes) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	if err := subQuestionLikes(db, likes.UserId, likes.QuestionId); err != nil {
-		log.Errorf("DeleteLikes: %s", err)
+		log.Errorf("Unlike: %s", err)
 		return nil, err
 	}
 
