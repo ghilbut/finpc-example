@@ -67,7 +67,8 @@ func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*Subject
 		var title string
 
 		if err := rows.Scan(&id, title); err != nil {
-			log.Fatalf("ListSubject: %s", err)
+			log.Errorf("ListSubject: %s", err)
+			return nil, err
 		}
 
 		list = append(list, &Subject{
