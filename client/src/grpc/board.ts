@@ -29,6 +29,7 @@ export interface NewSubject {
 export interface Subject {
   id: number;
   title: string;
+  enabled: boolean;
 }
 
 export interface SubjectId {
@@ -192,7 +193,7 @@ export const NewSubject = {
 };
 
 function createBaseSubject(): Subject {
-  return { id: 0, title: "" };
+  return { id: 0, title: "", enabled: false };
 }
 
 export const Subject = {
@@ -202,6 +203,9 @@ export const Subject = {
     }
     if (message.title !== "") {
       writer.uint32(18).string(message.title);
+    }
+    if (message.enabled === true) {
+      writer.uint32(24).bool(message.enabled);
     }
     return writer;
   },
@@ -227,6 +231,13 @@ export const Subject = {
 
           message.title = reader.string();
           continue;
+        case 3:
+          if (tag !== 24) {
+            break;
+          }
+
+          message.enabled = reader.bool();
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -237,7 +248,11 @@ export const Subject = {
   },
 
   fromJSON(object: any): Subject {
-    return { id: isSet(object.id) ? Number(object.id) : 0, title: isSet(object.title) ? String(object.title) : "" };
+    return {
+      id: isSet(object.id) ? Number(object.id) : 0,
+      title: isSet(object.title) ? String(object.title) : "",
+      enabled: isSet(object.enabled) ? Boolean(object.enabled) : false,
+    };
   },
 
   toJSON(message: Subject): unknown {
@@ -247,6 +262,9 @@ export const Subject = {
     }
     if (message.title !== "") {
       obj.title = message.title;
+    }
+    if (message.enabled === true) {
+      obj.enabled = message.enabled;
     }
     return obj;
   },
@@ -259,6 +277,7 @@ export const Subject = {
     const message = createBaseSubject();
     message.id = object.id ?? 0;
     message.title = object.title ?? "";
+    message.enabled = object.enabled ?? false;
     return message;
   },
 };
@@ -695,6 +714,15 @@ export const BoardService = {
     responseSerialize: (value: SubjectList) => Buffer.from(SubjectList.encode(value).finish()),
     responseDeserialize: (value: Buffer) => SubjectList.decode(value),
   },
+  getSubject: {
+    path: "/board.Board/GetSubject",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: SubjectId) => Buffer.from(SubjectId.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => SubjectId.decode(value),
+    responseSerialize: (value: Subject) => Buffer.from(Subject.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Subject.decode(value),
+  },
   createQuestion: {
     path: "/board.Board/CreateQuestion",
     requestStream: false,
@@ -735,8 +763,8 @@ export const BoardService = {
     path: "/board.Board/Like",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: Likes) => Buffer.from(Likes.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Likes.decode(value),
+    requestSerialize: (value: QuestionId) => Buffer.from(QuestionId.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => QuestionId.decode(value),
     responseSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Empty.decode(value),
   },
@@ -744,8 +772,8 @@ export const BoardService = {
     path: "/board.Board/Unlike",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: Likes) => Buffer.from(Likes.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Likes.decode(value),
+    requestSerialize: (value: QuestionId) => Buffer.from(QuestionId.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => QuestionId.decode(value),
     responseSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Empty.decode(value),
   },
@@ -755,12 +783,13 @@ export interface BoardServer extends UntypedServiceImplementation {
   createSubject: handleUnaryCall<NewSubject, Subject>;
   deleteSubject: handleUnaryCall<SubjectId, Empty>;
   listSubject: handleUnaryCall<Empty, SubjectList>;
+  getSubject: handleUnaryCall<SubjectId, Subject>;
   createQuestion: handleUnaryCall<NewQuestion, Question>;
   deleteQuestion: handleUnaryCall<QuestionId, Empty>;
   getQuestion: handleUnaryCall<QuestionId, Question>;
   listQuestion: handleUnaryCall<SubjectId, QuestionList>;
-  like: handleUnaryCall<Likes, Empty>;
-  unlike: handleUnaryCall<Likes, Empty>;
+  like: handleUnaryCall<QuestionId, Empty>;
+  unlike: handleUnaryCall<QuestionId, Empty>;
 }
 
 export interface BoardClient extends Client {
@@ -802,6 +831,18 @@ export interface BoardClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: SubjectList) => void,
+  ): ClientUnaryCall;
+  getSubject(request: SubjectId, callback: (error: ServiceError | null, response: Subject) => void): ClientUnaryCall;
+  getSubject(
+    request: SubjectId,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Subject) => void,
+  ): ClientUnaryCall;
+  getSubject(
+    request: SubjectId,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Subject) => void,
   ): ClientUnaryCall;
   createQuestion(
     request: NewQuestion,
@@ -857,26 +898,26 @@ export interface BoardClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: QuestionList) => void,
   ): ClientUnaryCall;
-  like(request: Likes, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
+  like(request: QuestionId, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
   like(
-    request: Likes,
+    request: QuestionId,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
   like(
-    request: Likes,
+    request: QuestionId,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
-  unlike(request: Likes, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
+  unlike(request: QuestionId, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
   unlike(
-    request: Likes,
+    request: QuestionId,
     metadata: Metadata,
     callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
   unlike(
-    request: Likes,
+    request: QuestionId,
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: Empty) => void,

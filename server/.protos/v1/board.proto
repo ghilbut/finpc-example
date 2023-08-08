@@ -10,6 +10,7 @@ service Board {
   rpc CreateSubject (NewSubject) returns (Subject);
   rpc DeleteSubject (SubjectId) returns (google.protobuf.Empty);
   rpc ListSubject (google.protobuf.Empty) returns (SubjectList);
+  rpc GetSubject (SubjectId) returns (Subject);
 
   rpc CreateQuestion (NewQuestion) returns (Question);
   rpc DeleteQuestion (QuestionId) returns (google.protobuf.Empty);
@@ -32,6 +33,7 @@ message NewSubject {
 message Subject {
   int64 id = 1;
   string title = 2;
+  bool enabled = 3;
 }
 
 message SubjectId {

@@ -53,7 +53,7 @@ func (b *Board) DeleteSubject(ctx context.Context, subjectId *SubjectId) (*empty
 func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*SubjectList, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	rows, err := db.Query("SELECT id, title FROM subject ORDER BY id;")
+	rows, err := db.Query("SELECT id, title, enabled FROM subject ORDER BY id;")
 	if err != nil {
 		log.Errorf("ListSubject: %s", err)
 		return nil, err
@@ -65,15 +65,17 @@ func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*Subject
 	for rows.Next() {
 		var id int64
 		var title string
+		var enabled bool
 
-		if err := rows.Scan(&id, title); err != nil {
+		if err := rows.Scan(&id, &title, &enabled); err != nil {
 			log.Errorf("ListSubject: %s", err)
 			return nil, err
 		}
 
 		list = append(list, &Subject{
-			Id:    id,
-			Title: title,
+			Id:      id,
+			Title:   title,
+			Enabled: enabled,
 		})
 	}
 
@@ -82,8 +84,45 @@ func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*Subject
 	}, nil
 }
 
+func (b *Board) GetSubject(ctx context.Context, subjectId *SubjectId) (*Subject, error) {
+	db := ctx.Value(DBSession).(*sql.DB)
+
+	rows, err := db.Query("SELECT id, title, enabled FROM subject WHERE id = $1", subjectId.Id)
+	if err != nil {
+		log.Errorf("GetSubject: %s", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	subject := &Subject{}
+
+	for rows.Next() {
+		if err := rows.Scan(&subject.Id, &subject.Title, &subject.Enabled); err != nil {
+			log.Errorf("GetSubject: %s", err)
+			return nil, err
+		}
+	}
+
+	return subject, nil
+}
+
 func (b *Board) CreateQuestion(ctx context.Context, newQuestion *NewQuestion) (*Question, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
+
+	subject, err := selectSubject(db, newQuestion.SubjectId)
+	if err != nil {
+		log.Errorf("CreateQuestion: failed to select subject. %s", err)
+		return nil, err
+	}
+	if subject == nil {
+		log.Errorf("CreateQuestion: subjectId '%d' is not exists", newQuestion.SubjectId)
+		return nil, errors.New("this subject is not exists")
+	}
+
+	if subject.Enabled == false {
+		log.Errorf("CreateQuestion: subjectId '%d' is disable", subject.Id)
+		return nil, errors.New("this subject is disable")
+	}
 
 	if len(newQuestion.GetQuestion()) == 0 {
 		log.Errorf("CreateQuestion: empty input 'question'")
@@ -136,7 +175,9 @@ func (b *Board) GetQuestion(ctx context.Context, questionId *QuestionId) (*Quest
 func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*QuestionList, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	rows, err := db.Query("SELECT id, question, likes FROM question WHERE subject_id = ? ORDER BY likes DESC;", subjectId)
+	rows, err := db.Query(
+		"SELECT id, question, likes FROM question WHERE subject_id = $1 ORDER BY likes DESC;",
+		subjectId.Id)
 	if err != nil {
 		log.Errorf("ListQuestion: %s", err)
 		return nil, err
@@ -212,7 +253,7 @@ func insertSubject(db *sql.DB, title string) error {
 }
 
 func selectSubjectByTitle(db *sql.DB, title string) (*Subject, error) {
-	rows, err := db.Query("SELECT id, title FROM subject WHERE title = '?'", title)
+	rows, err := db.Query("SELECT id, title, enabled FROM subject WHERE title = $1", title)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +262,25 @@ func selectSubjectByTitle(db *sql.DB, title string) (*Subject, error) {
 	subject := &Subject{}
 
 	for rows.Next() {
-		if err := rows.Scan(&subject.Id, &subject.Title); err != nil {
+		if err := rows.Scan(&subject.Id, &subject.Title, &subject.Enabled); err != nil {
+			return nil, err
+		}
+	}
+
+	return subject, nil
+}
+
+func selectSubject(db *sql.DB, id int64) (*Subject, error) {
+	rows, err := db.Query("SELECT id, title, enabled FROM subject WHERE id = $2", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	subject := &Subject{}
+
+	for rows.Next() {
+		if err := rows.Scan(&subject.Id, &subject.Title, &subject.Enabled); err != nil {
 			return nil, err
 		}
 	}
@@ -230,7 +289,7 @@ func selectSubjectByTitle(db *sql.DB, title string) (*Subject, error) {
 }
 
 func deleteSubject(db *sql.DB, subjectId int64) error {
-	stmt, err := db.Prepare("DELETE FROM subject WHERE id = ?")
+	stmt, err := db.Prepare("DELETE FROM subject WHERE id = $1")
 	if err != nil {
 		return err
 	}
@@ -252,7 +311,7 @@ func deleteSubject(db *sql.DB, subjectId int64) error {
 }
 
 func insertQuestion(db *sql.DB, question string, subjectId int64) (int64, error) {
-	stmt, err := db.Prepare("INSERT INTO question(question, subject_id) VALUES (?, ?)")
+	stmt, err := db.Prepare("INSERT INTO question(question, subject_id) VALUES ($1, $2)")
 	if err != nil {
 		return 0, err
 	}
@@ -279,7 +338,7 @@ func insertQuestion(db *sql.DB, question string, subjectId int64) (int64, error)
 }
 
 func selectQuestion(db *sql.DB, id int64) (*Question, error) {
-	rows, err := db.Query("SELECT id, question, likes FROM question WHERE id = '?'", id)
+	rows, err := db.Query("SELECT id, question, likes FROM question WHERE id = $1", id)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +356,7 @@ func selectQuestion(db *sql.DB, id int64) (*Question, error) {
 }
 
 func deleteQuestion(db *sql.DB, id int64) error {
-	stmt, err := db.Prepare("DELETE FROM question WHERE id = ?")
+	stmt, err := db.Prepare("DELETE FROM question WHERE id = $1")
 	if err != nil {
 		return err
 	}
@@ -320,7 +379,7 @@ func deleteQuestion(db *sql.DB, id int64) error {
 
 func addQuestionLikes(db *sql.DB, questionId int64) error {
 	//stmt, err := db.Prepare("INSERT INTO likes(user_id, question_id) VALUES (?, ?)")
-	stmt, err := db.Prepare("UPDATE question SET likes = likes + 1 WHERE id = ?")
+	stmt, err := db.Prepare("UPDATE question SET likes = likes + 1 WHERE id = $1")
 	if err != nil {
 		return err
 	}
@@ -343,7 +402,7 @@ func addQuestionLikes(db *sql.DB, questionId int64) error {
 
 func subQuestionLikes(db *sql.DB, questionId int64) error {
 	//stmt, err := db.Prepare("DELETE FROM likes WHERE user_id = ? AND question_id = ?")
-	stmt, err := db.Prepare("UPDATE question SET likes = likes - 1 WHERE id = ?")
+	stmt, err := db.Prepare("UPDATE question SET likes = likes - 1 WHERE id = $1")
 	if err != nil {
 		return err
 	}
