@@ -26,6 +26,7 @@ type BoardClient interface {
 	CreateSubject(ctx context.Context, in *NewSubject, opts ...grpc.CallOption) (*Subject, error)
 	DeleteSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListSubject(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error)
+	GetSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*Subject, error)
 	CreateQuestion(ctx context.Context, in *NewQuestion, opts ...grpc.CallOption) (*Question, error)
 	DeleteQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*Question, error)
@@ -63,6 +64,15 @@ func (c *boardClient) DeleteSubject(ctx context.Context, in *SubjectId, opts ...
 func (c *boardClient) ListSubject(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error) {
 	out := new(SubjectList)
 	err := c.cc.Invoke(ctx, "/board.Board/ListSubject", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardClient) GetSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*Subject, error) {
+	out := new(Subject)
+	err := c.cc.Invoke(ctx, "/board.Board/GetSubject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -130,6 +140,7 @@ type BoardServer interface {
 	CreateSubject(context.Context, *NewSubject) (*Subject, error)
 	DeleteSubject(context.Context, *SubjectId) (*emptypb.Empty, error)
 	ListSubject(context.Context, *emptypb.Empty) (*SubjectList, error)
+	GetSubject(context.Context, *SubjectId) (*Subject, error)
 	CreateQuestion(context.Context, *NewQuestion) (*Question, error)
 	DeleteQuestion(context.Context, *QuestionId) (*emptypb.Empty, error)
 	GetQuestion(context.Context, *QuestionId) (*Question, error)
@@ -151,6 +162,9 @@ func (UnimplementedBoardServer) DeleteSubject(context.Context, *SubjectId) (*emp
 }
 func (UnimplementedBoardServer) ListSubject(context.Context, *emptypb.Empty) (*SubjectList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListSubject not implemented")
+}
+func (UnimplementedBoardServer) GetSubject(context.Context, *SubjectId) (*Subject, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSubject not implemented")
 }
 func (UnimplementedBoardServer) CreateQuestion(context.Context, *NewQuestion) (*Question, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateQuestion not implemented")
@@ -233,6 +247,24 @@ func _Board_ListSubject_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BoardServer).ListSubject(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Board_GetSubject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubjectId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServer).GetSubject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/board.Board/GetSubject",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServer).GetSubject(ctx, req.(*SubjectId))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -363,6 +395,10 @@ var Board_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListSubject",
 			Handler:    _Board_ListSubject_Handler,
+		},
+		{
+			MethodName: "GetSubject",
+			Handler:    _Board_GetSubject_Handler,
 		},
 		{
 			MethodName: "CreateQuestion",
