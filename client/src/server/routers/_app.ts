@@ -3,7 +3,6 @@ import {z} from 'zod';
 import {Stock, TradingClient} from '~/grpc/trading';
 import {BoardClient, Question, Subject} from '~/grpc/board';
 import {procedure, router} from '../trpc';
-import {Simulate} from "react-dom/test-utils";
 
 
 const host = process.env.GRPC_HOST || '127.0.0.1';
@@ -85,18 +84,15 @@ export const appRouter = router({
             subjectId: z.number(),
         })
     ).mutation(async ({input: newQuestion}) => {
-        const question: Promise<Question> = new Promise((resolve, reject) => {
+        new Promise((resolve, reject) => {
             board.createQuestion(newQuestion, (err, question) => {
                 if (err) {
                     console.error(err);
                     reject(err);
                     return;
                 }
-
-                resolve(question);
             });
         });
-        return question;
     }),
 
     like: procedure.input(
