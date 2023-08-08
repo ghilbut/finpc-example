@@ -729,8 +729,8 @@ export const BoardService = {
     responseStream: false,
     requestSerialize: (value: NewQuestion) => Buffer.from(NewQuestion.encode(value).finish()),
     requestDeserialize: (value: Buffer) => NewQuestion.decode(value),
-    responseSerialize: (value: Question) => Buffer.from(Question.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Question.decode(value),
+    responseSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Empty.decode(value),
   },
   deleteQuestion: {
     path: "/board.Board/DeleteQuestion",
@@ -784,7 +784,7 @@ export interface BoardServer extends UntypedServiceImplementation {
   deleteSubject: handleUnaryCall<SubjectId, Empty>;
   listSubject: handleUnaryCall<Empty, SubjectList>;
   getSubject: handleUnaryCall<SubjectId, Subject>;
-  createQuestion: handleUnaryCall<NewQuestion, Question>;
+  createQuestion: handleUnaryCall<NewQuestion, Empty>;
   deleteQuestion: handleUnaryCall<QuestionId, Empty>;
   getQuestion: handleUnaryCall<QuestionId, Question>;
   listQuestion: handleUnaryCall<SubjectId, QuestionList>;
@@ -846,18 +846,18 @@ export interface BoardClient extends Client {
   ): ClientUnaryCall;
   createQuestion(
     request: NewQuestion,
-    callback: (error: ServiceError | null, response: Question) => void,
+    callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
   createQuestion(
     request: NewQuestion,
     metadata: Metadata,
-    callback: (error: ServiceError | null, response: Question) => void,
+    callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
   createQuestion(
     request: NewQuestion,
     metadata: Metadata,
     options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: Question) => void,
+    callback: (error: ServiceError | null, response: Empty) => void,
   ): ClientUnaryCall;
   deleteQuestion(request: QuestionId, callback: (error: ServiceError | null, response: Empty) => void): ClientUnaryCall;
   deleteQuestion(
