@@ -106,7 +106,7 @@ func (b *Board) GetSubject(ctx context.Context, subjectId *SubjectId) (*Subject,
 	return subject, nil
 }
 
-func (b *Board) CreateQuestion(ctx context.Context, newQuestion *NewQuestion) (*Question, error) {
+func (b *Board) CreateQuestion(ctx context.Context, newQuestion *NewQuestion) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	subject, err := selectSubject(db, newQuestion.SubjectId)
@@ -129,19 +129,13 @@ func (b *Board) CreateQuestion(ctx context.Context, newQuestion *NewQuestion) (*
 		return nil, errors.New("'question' is empty")
 	}
 
-	insertedId, err := insertQuestion(db, newQuestion.Question, newQuestion.SubjectId)
+	err = insertQuestion(db, newQuestion.Question, newQuestion.SubjectId)
 	if err != nil {
 		log.Errorf("CreateQuestion: %s", err)
 		return nil, err
 	}
 
-	question, err := selectQuestion(db, insertedId)
-	if err != nil {
-		log.Errorf("CreateQuestion: failed to select created question. %s", err)
-		return nil, err
-	}
-
-	return question, nil
+	return nil, nil
 }
 
 func (b *Board) DeleteQuestion(ctx context.Context, questionId *QuestionId) (*emptypb.Empty, error) {
@@ -271,7 +265,7 @@ func selectSubjectByTitle(db *sql.DB, title string) (*Subject, error) {
 }
 
 func selectSubject(db *sql.DB, id int64) (*Subject, error) {
-	rows, err := db.Query("SELECT id, title, enabled FROM subject WHERE id = $2", id)
+	rows, err := db.Query("SELECT id, title, enabled FROM subject WHERE id = $1", id)
 	if err != nil {
 		return nil, err
 	}
@@ -310,31 +304,26 @@ func deleteSubject(db *sql.DB, subjectId int64) error {
 	return nil
 }
 
-func insertQuestion(db *sql.DB, question string, subjectId int64) (int64, error) {
+func insertQuestion(db *sql.DB, question string, subjectId int64) error {
 	stmt, err := db.Prepare("INSERT INTO question(question, subject_id) VALUES ($1, $2)")
 	if err != nil {
-		return 0, err
+		return err
 	}
 	defer stmt.Close()
 
 	tx, err := db.Begin()
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	res, err := tx.Stmt(stmt).Exec(question, subjectId)
+	_, err = tx.Stmt(stmt).Exec(question, subjectId)
 	if err != nil {
 		tx.Rollback()
-		return 0, err
-	}
-
-	insertedId, err := res.LastInsertId()
-	if err != nil {
-		return 0, err
+		return err
 	}
 
 	tx.Commit()
-	return insertedId, nil
+	return nil
 }
 
 func selectQuestion(db *sql.DB, id int64) (*Question, error) {
