@@ -1,8 +1,10 @@
-import { credentials } from '@grpc/grpc-js';
-import { z } from 'zod';
-import { Stock, TradingClient } from '~/grpc/trading';
-import { BoardClient, Subject, Question } from '~/grpc/board';
-import { procedure, router } from '../trpc';
+import {credentials} from '@grpc/grpc-js';
+import {z} from 'zod';
+import {Stock, TradingClient} from '~/grpc/trading';
+import {BoardClient, Question, Subject} from '~/grpc/board';
+import {procedure, router} from '../trpc';
+import {Simulate} from "react-dom/test-utils";
+
 
 const host = process.env.GRPC_HOST || '127.0.0.1';
 const port = process.env.GRPC_PORT || '9095';
@@ -21,47 +23,95 @@ console.log('GRPC_HOST_OVERRIDE: ', process.env.GRPC_HOST_OVERRIDE || '');
 console.log('GRPC_OPTIONS: ', opts);
 
 const trading = new TradingClient(`${host}:${port}`, creds, opts);
+const board = new BoardClient(`${host}:${port}`, creds, opts);
 
 export const appRouter = router({
-    listSubjects: procedure.query(() => {
-        return [
-            { id: 1, title: 'subject #1' },
-            { id: 2, title: 'subject #2' },
-            { id: 3, title: 'subject #3' },
-            { id: 4, title: 'subject #4' },
-        ];
+    listSubjects: procedure.query(async (): Promise<Subject[]> => {
+        const subjects: Promise<Subject[]> = new Promise((resolve, reject) => {
+            board.listSubject({}, (err, subjectList) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                    return;
+                }
+
+                resolve(subjectList.subjectList);
+            });
+        });
+        return subjects;
     }),
 
     getSubject: procedure.input(
         z.object({
             id: z.number(),
         })
-    ).query(async ({ input }) => {
-        return { id: input.id, title: `subject #${input.id}` };
+    ).query(async ({input}): Promise<Subject> => {
+        const subject: Promise<Subject> = new Promise((resolve, reject) => {
+            board.getSubject(input, (err, subject) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                    return;
+                }
+
+                resolve(subject);
+            });
+        });
+        return subject;
     }),
 
-    listQuestions: procedure.input(z.object({
-        id: z.number(),
-    })).query(async ({ input }) => {
-        return [
-            { id: 1, question: 'question #1', like: 0 },
-            { id: 2, question: 'question #2', like: 0 },
-            { id: 3, question: 'question #3', like: 0 },
-            { id: 4, question: 'question #4', like: 0 },
-        ];
+    listQuestions: procedure.input(
+        z.object({
+            id: z.number(),
+        })
+    ).query(async ({input}): Promise<Question[]> => {
+        const questions: Promise<Question[]> = new Promise((resolve, reject) => {
+            board.listQuestion(input, (err, questionList) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                    return;
+                }
+
+                resolve(questionList.questionList);
+            });
+        });
+        return questions;
     }),
 
-    createQuestion: procedure.input(z.object({
-        id: z.number(),
-        title: z.string(),
-    })).mutation(async ({ input }) => {
+    createQuestion: procedure.input(
+        z.object({
+            question: z.string(),
+            subjectId: z.number(),
+        })
+    ).mutation(async ({input: newQuestion}) => {
+        const question: Promise<Question> = new Promise((resolve, reject) => {
+            board.createQuestion(newQuestion, (err, question) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                    return;
+                }
 
+                resolve(question);
+            });
+        });
+        return question;
     }),
 
-    like: procedure.input(z.object({
-        id: z.number(),
-    })).mutation(async ({ input }) => {
-
+    like: procedure.input(
+        z.object({
+            id: z.number(),
+        })).mutation(async ({input}) => {
+        new Promise((resolve, reject) => {
+            board.like(input, (err, empty) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                    return;
+                }
+            });
+        });
     }),
 
     getStockList: procedure.query(async (): Promise<Stock[]> => {
