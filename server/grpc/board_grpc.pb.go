@@ -27,7 +27,7 @@ type BoardClient interface {
 	DeleteSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListSubject(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error)
 	GetSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*Subject, error)
-	CreateQuestion(ctx context.Context, in *NewQuestion, opts ...grpc.CallOption) (*Question, error)
+	CreateQuestion(ctx context.Context, in *NewQuestion, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*Question, error)
 	ListQuestion(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error)
@@ -79,8 +79,8 @@ func (c *boardClient) GetSubject(ctx context.Context, in *SubjectId, opts ...grp
 	return out, nil
 }
 
-func (c *boardClient) CreateQuestion(ctx context.Context, in *NewQuestion, opts ...grpc.CallOption) (*Question, error) {
-	out := new(Question)
+func (c *boardClient) CreateQuestion(ctx context.Context, in *NewQuestion, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/board.Board/CreateQuestion", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ type BoardServer interface {
 	DeleteSubject(context.Context, *SubjectId) (*emptypb.Empty, error)
 	ListSubject(context.Context, *emptypb.Empty) (*SubjectList, error)
 	GetSubject(context.Context, *SubjectId) (*Subject, error)
-	CreateQuestion(context.Context, *NewQuestion) (*Question, error)
+	CreateQuestion(context.Context, *NewQuestion) (*emptypb.Empty, error)
 	DeleteQuestion(context.Context, *QuestionId) (*emptypb.Empty, error)
 	GetQuestion(context.Context, *QuestionId) (*Question, error)
 	ListQuestion(context.Context, *SubjectId) (*QuestionList, error)
@@ -166,7 +166,7 @@ func (UnimplementedBoardServer) ListSubject(context.Context, *emptypb.Empty) (*S
 func (UnimplementedBoardServer) GetSubject(context.Context, *SubjectId) (*Subject, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubject not implemented")
 }
-func (UnimplementedBoardServer) CreateQuestion(context.Context, *NewQuestion) (*Question, error) {
+func (UnimplementedBoardServer) CreateQuestion(context.Context, *NewQuestion) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateQuestion not implemented")
 }
 func (UnimplementedBoardServer) DeleteQuestion(context.Context, *QuestionId) (*emptypb.Empty, error) {
