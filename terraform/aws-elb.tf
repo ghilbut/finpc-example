@@ -82,7 +82,7 @@ resource aws_lb_listener alb_http {
   }
 
   tags = {
-    Name = "${var.project}-alb- http"
+    Name = "${var.project}-alb-http"
   }
 }
 

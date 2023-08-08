@@ -9,6 +9,7 @@ on:
 
 jobs:
   build:
+    if: vars.DISABLE_GITHUB_ACTIONS != 'true'
     runs-on: ubuntu-latest
     env:
       WORKDIR: ./proxy
