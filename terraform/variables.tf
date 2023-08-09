@@ -39,7 +39,17 @@ variable github_token {
   sensitive = true
 }
 
+variable github_org {
+  type    = string
+  default = "ghilbut"
+}
+
 variable github_repository {
   type    = string
   default = "finpc-example"
+}
+
+variable github_enable_actions {
+  type    = bool
+  default = true
 }
