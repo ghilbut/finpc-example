@@ -15,6 +15,15 @@ variable aws_profile {
   default = "default"
 }
 
+variable aws_access_key {
+  type      = string
+}
+
+variable aws_secret_key {
+  type      = string
+  sensitive = true
+}
+
 variable aws_region {
   type    = string
   default = "ap-northeast-2"
@@ -25,16 +34,12 @@ variable cidr_block {
   default = "10.0.0.0/16"
 }
 
-variable aws_dns_profile {
-  type    = string
-  default = "default"
+variable github_token {
+  type      = string
+  sensitive = true
 }
 
-variable root_domain {
+variable github_repository {
   type    = string
-  default = "ultary.in"
-}
-
-variable host_prefix {
-  type = string
+  default = "finpc-example"
 }

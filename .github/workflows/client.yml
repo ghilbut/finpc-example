@@ -9,6 +9,7 @@ on:
 
 jobs:
   build:
+    if: vars.ENABLE_GITHUB_ACTIONS == 'true'
     runs-on: ubuntu-latest
     env:
       WORKDIR: ./client
@@ -74,7 +75,7 @@ jobs:
     - name: Get AWS ECS task definition
       run:  |
         aws ecs describe-task-definition \
-            --task-definition finpc-client \
+            --task-definition ${{ vars.PROJECT_NAME }}-client \
             --query taskDefinition > task-definition.json
       working-directory: ${{ env.WORKDIR }}
 
@@ -91,5 +92,5 @@ jobs:
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         service: client
-        cluster: finpc
+        cluster: ${{ vars.PROJECT_NAME }}
         wait-for-service-stability: true

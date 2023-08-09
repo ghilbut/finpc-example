@@ -9,6 +9,7 @@ on:
 
 jobs:
   build:
+    if: vars.ENABLE_GITHUB_ACTIONS == 'true'
     runs-on: ubuntu-latest
     env:
       WORKDIR: ./proxy
@@ -48,7 +49,7 @@ jobs:
     - name: Get AWS ECS task definition
       run:  |
         aws ecs describe-task-definition \
-            --task-definition finpc-proxy \
+            --task-definition ${{ vars.PROJECT_NAME }}-proxy \
             --query taskDefinition > task-definition.json
       working-directory: ${{ env.WORKDIR }}
 
@@ -65,5 +66,5 @@ jobs:
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         service: proxy
-        cluster: finpc
+        cluster: ${{ vars.PROJECT_NAME }}
         wait-for-service-stability: true
