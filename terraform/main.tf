@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.11"
     }
+    github = {
+      source  = "integrations/github"
+      version = "~> 5.32"
+    }
   }
 }
 
@@ -24,4 +28,8 @@ provider aws {
       project           = var.project
     }
   }
+}
+
+provider github {
+  token = var.github_token
 }

@@ -4,7 +4,6 @@ locals {
   alb_rest_priority   = 100
 }
 
-
 variable project {
   type    = string
   default = "finpc"
@@ -13,6 +12,15 @@ variable project {
 variable aws_profile {
   type    = string
   default = "default"
+}
+
+variable aws_access_key {
+  type      = string
+}
+
+variable aws_secret_key {
+  type      = string
+  sensitive = true
 }
 
 variable aws_region {
@@ -25,16 +33,12 @@ variable cidr_block {
   default = "10.0.0.0/16"
 }
 
-variable aws_dns_profile {
-  type    = string
-  default = "default"
+variable github_token {
+  type      = string
+  sensitive = true
 }
 
-variable root_domain {
+variable github_repository {
   type    = string
-  default = "ultary.in"
-}
-
-variable host_prefix {
-  type = string
+  default = "finpc-example"
 }
