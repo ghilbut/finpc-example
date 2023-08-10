@@ -12,7 +12,7 @@ locals {
 ##
 
 resource aws_ecr_repository server {
-  name = local.server_name
+  name = "${var.project}-${local.server_name}"
 
   image_scanning_configuration {
     scan_on_push = true

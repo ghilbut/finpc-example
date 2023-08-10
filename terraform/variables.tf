@@ -15,15 +15,6 @@ variable aws_profile {
   default = "default"
 }
 
-variable aws_access_key {
-  type      = string
-}
-
-variable aws_secret_key {
-  type      = string
-  sensitive = true
-}
-
 variable aws_region {
   type    = string
   default = "ap-northeast-2"
@@ -39,6 +30,16 @@ variable github_token {
   sensitive = true
 }
 
+variable github_debug_actions {
+  type    = bool
+  default = false
+}
+
+variable github_enable_actions {
+  type    = bool
+  default = true
+}
+
 variable github_org {
   type    = string
   default = "ghilbut"
@@ -47,9 +48,4 @@ variable github_org {
 variable github_repository {
   type    = string
   default = "finpc-example"
-}
-
-variable github_enable_actions {
-  type    = bool
-  default = true
 }

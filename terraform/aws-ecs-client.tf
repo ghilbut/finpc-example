@@ -11,7 +11,7 @@ locals {
 ##
 
 resource aws_ecr_repository client {
-  name = local.client_name
+  name = "${var.project}-${local.client_name}"
 
   image_scanning_configuration {
     scan_on_push = true
