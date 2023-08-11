@@ -54,9 +54,12 @@ resource aws_security_group rds {
 ##  password
 
 resource random_password rds {
-  length      = 12
+  length = 12
+
   min_lower   = 2
   min_numeric = 2
   min_special = 2
   min_upper   = 2
+
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }

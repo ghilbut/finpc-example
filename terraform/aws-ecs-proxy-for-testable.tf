@@ -20,6 +20,8 @@ resource local_file proxy {
 resource aws_ecr_repository proxy {
   name = "${var.project}-${local.proxy_name}"
 
+  force_delete = true
+
   image_scanning_configuration {
     scan_on_push = true
   }

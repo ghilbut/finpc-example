@@ -14,6 +14,8 @@ locals {
 resource aws_ecr_repository server {
   name = "${var.project}-${local.server_name}"
 
+  force_delete = true
+
   image_scanning_configuration {
     scan_on_push = true
   }
