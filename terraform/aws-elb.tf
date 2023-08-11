@@ -121,6 +121,15 @@ resource aws_security_group alb {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = local.grpc_port
+    to_port     = local.grpc_port
+    protocol    = "tcp"
+    security_groups = [
+      aws_security_group.bastian.id,
+    ]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

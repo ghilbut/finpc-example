@@ -21,6 +21,12 @@ resource github_actions_variable project_name {
   value         = var.project
 }
 
+resource github_actions_variable aws_region {
+  repository    = var.github_repository
+  variable_name = "AWS_REGION"
+  value         = var.aws_region
+}
+
 resource github_actions_secret aws_iam_role_for_actions {
   repository      = var.github_repository
   secret_name     = "AWS_IAM_ROLE"

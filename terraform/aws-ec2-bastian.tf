@@ -3,9 +3,49 @@
 ##  AWS EC2 - Bastian server
 ##
 
-# resource aws_instance bastian {
-#
-# }
+data aws_ami bastian {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "architecture"
+    values = ["arm64"]
+  }
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023*"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+resource aws_instance bastian {
+  ami           = data.aws_ami.bastian.id
+  availability_zone = aws_subnet.private["a"].availability_zone
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+  ebs_optimized = true
+  iam_instance_profile = aws_iam_instance_profile.bastian.id
+  instance_type = "t4g.nano"
+  root_block_device {
+    volume_size = 8
+    volume_type = "gp3"
+  }
+  subnet_id = aws_subnet.private["a"].id
+  vpc_security_group_ids = [
+    aws_security_group.bastian.id,
+  ]
+
+  tags = {
+    Name = "${var.project}-bastian"
+  }
+  volume_tags = {
+    Name = "${var.project}-bastian"
+  }
+}
 
 resource aws_security_group bastian {
   name   = "${var.project}-bastian"
@@ -34,6 +74,16 @@ resource aws_security_group bastian {
 
   tags = {
     Name = "sg-${var.project}-bastian",
+  }
+}
+
+resource aws_iam_instance_profile bastian {
+  name = "${var.project}-bastian-instance-profile"
+
+  role = aws_iam_role.bastian.id
+
+  tags = {
+    Name = "${var.project}-bastian-instance-profile"
   }
 }
 
