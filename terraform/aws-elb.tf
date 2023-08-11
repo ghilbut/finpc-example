@@ -82,7 +82,7 @@ resource aws_lb_listener alb_http {
   }
 
   tags = {
-    Name = "${var.project}-alb- http"
+    Name = "${var.project}-alb-http"
   }
 }
 
@@ -119,15 +119,6 @@ resource aws_security_group alb {
     to_port     = local.grpc_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = local.grpc_port
-    to_port     = local.grpc_port
-    protocol    = "tcp"
-    security_groups = [
-      aws_security_group.bastian.id,
-    ]
   }
 
   egress {

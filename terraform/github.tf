@@ -83,7 +83,6 @@ resource aws_iam_policy github_actions {
           ],
           "Resource": [
             "${aws_ecr_repository.client.arn}",
-            "${aws_ecr_repository.proxy.arn}",
             "${aws_ecr_repository.server.arn}"
           ]
         },
@@ -114,7 +113,6 @@ resource aws_iam_policy github_actions {
            ],
            "Resource": [
               "${aws_ecs_service.client.id}",
-              "${aws_ecs_service.proxy.id}",
               "${aws_ecs_service.server.id}"
            ]
         }

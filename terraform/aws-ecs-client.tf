@@ -123,10 +123,10 @@ resource aws_security_group client {
   vpc_id = aws_vpc.this.id
 
   ingress {
-    from_port   = local.client_port
-    to_port     = local.client_port
-    protocol    = "tcp"
-    cidr_blocks = values(aws_subnet.private).*.cidr_block
+    from_port       = local.client_port
+    to_port         = local.client_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
   }
 
   egress {
