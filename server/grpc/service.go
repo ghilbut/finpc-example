@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"database/sql"
+	"github.com/getsentry/sentry-go"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -51,6 +52,7 @@ func NewGrpcServer(db *sql.DB) *grpc.Server {
 	hd.MinLength = 7
 	h, err := hashids.NewWithData(hd)
 	if err != nil {
+		sentry.CaptureMessage(err.Error())
 		log.Fatal(err)
 	}
 
