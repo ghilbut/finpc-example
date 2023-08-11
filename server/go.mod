@@ -3,6 +3,7 @@ module github.com/ghilbut/finpc
 go 1.20
 
 require (
+	github.com/getsentry/sentry-go v0.23.0
 	github.com/lib/pq v1.10.9
 	github.com/sirupsen/logrus v1.9.3
 	github.com/speps/go-hashids v2.0.0+incompatible

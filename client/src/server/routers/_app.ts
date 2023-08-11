@@ -3,7 +3,7 @@ import {z} from 'zod';
 import {Stock, TradingClient} from '~/grpc/trading';
 import {BoardClient, Question, Subject} from '~/grpc/board';
 import {procedure, router} from '../trpc';
-
+import * as Sentry from '@sentry/nextjs';
 
 const host = process.env.GRPC_HOST || '127.0.0.1';
 const port = process.env.GRPC_PORT || '9095';
@@ -29,6 +29,7 @@ export const appRouter = router({
         const subjects: Promise<Subject[]> = new Promise((resolve, reject) => {
             board.listSubject({}, (err, subjectList) => {
                 if (err) {
+                    Sentry.captureException(err)
                     console.error(err);
                     reject(err);
                     return;
@@ -48,6 +49,7 @@ export const appRouter = router({
         const subject: Promise<Subject> = new Promise((resolve, reject) => {
             board.getSubject(input, (err, subject) => {
                 if (err) {
+                    Sentry.captureException(err)
                     console.error(err);
                     reject(err);
                     return;
@@ -67,6 +69,7 @@ export const appRouter = router({
         const questions: Promise<Question[]> = new Promise((resolve, reject) => {
             board.listQuestion(input, (err, questionList) => {
                 if (err) {
+                    Sentry.captureException(err)
                     console.error(err);
                     reject(err);
                     return;
@@ -87,6 +90,7 @@ export const appRouter = router({
         new Promise((resolve, reject) => {
             board.createQuestion(newQuestion, (err, question) => {
                 if (err) {
+                    Sentry.captureException(err)
                     console.error(err);
                     reject(err);
                     return;
@@ -102,6 +106,7 @@ export const appRouter = router({
         new Promise((resolve, reject) => {
             board.like(input, (err, empty) => {
                 if (err) {
+                    Sentry.captureException(err)
                     console.error(err);
                     reject(err);
                     return;
@@ -114,6 +119,7 @@ export const appRouter = router({
         const stocks: Promise<Stock[]> = new Promise((resolve, reject) => {
             trading.getStockList({}, (err, stockListResp) => {
                 if (err) {
+                    Sentry.captureException(err)
                     console.error(err);
                     reject(err);
                     return;

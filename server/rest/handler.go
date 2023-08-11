@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"github.com/getsentry/sentry-go"
 	"github.com/valyala/fasthttp"
 )
 
@@ -20,6 +21,7 @@ func (o *Rest) Handler(ctx *fasthttp.RequestCtx) {
 	}
 
 	err := fmt.Sprintf("(%s) not found", path)
+	sentry.CaptureMessage(err)
 	ctx.Error(err, fasthttp.StatusNotFound)
 }
 
