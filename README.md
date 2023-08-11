@@ -9,10 +9,6 @@ server: golang gRPC
 terraform: aws cloud
 
 
-AWS key
-액세스 키: AKIAWIQYFGCY2V6WJKJX
-비밀 액세스 키: 7lpb89p0xH+rRCxjdD1VnMEEcPDV4QOR+pH8Ayd4
-
 github에서 action(proxy, client, server 3개 다 배포) 후
 $terraform output 하면 endpoint = ~~~~~ 라고 뜰거다
 
