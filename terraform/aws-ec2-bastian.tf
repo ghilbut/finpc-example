@@ -22,22 +22,22 @@ data aws_ami bastian {
 }
 
 resource aws_instance bastian {
-  ami           = data.aws_ami.bastian.id
+  ami               = data.aws_ami.bastian.id
   availability_zone = aws_subnet.private["a"].availability_zone
+
   credit_specification {
     cpu_credits = "unlimited"
   }
-  ebs_optimized = true
+  ebs_optimized        = true
   iam_instance_profile = aws_iam_instance_profile.bastian.id
-  instance_type = "t4g.nano"
+  instance_type        = "t4g.nano"
   root_block_device {
     volume_size = 8
     volume_type = "gp3"
   }
-  subnet_id = aws_subnet.private["a"].id
-  vpc_security_group_ids = [
-    aws_security_group.bastian.id,
-  ]
+
+  subnet_id              = aws_subnet.private["a"].id
+  vpc_security_group_ids = [aws_security_group.bastian.id]
 
   tags = {
     Name = "${var.project}-bastian"
