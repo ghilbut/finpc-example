@@ -47,7 +47,6 @@ func SentryStreamInterceptor() grpc.StreamServerInterceptor {
 			}
 		})
 
-		span := sentry.StartSpan(ctx, "grpc.server")
 		ctx = span.Context()
 		defer span.Finish()
 
