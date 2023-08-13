@@ -34,16 +34,20 @@ func SentryStreamInterceptor() grpc.StreamServerInterceptor {
 		}
 
 		span := sentry.StartSpan(ctx, "grpc.server", func(s *sentry.Span) {
-			traceId := metadata.ValueFromIncomingContext(ctx, "traceId")
-			_, err := hex.Decode(s.TraceID[:], []byte(traceId[0]))
-			if err != nil {
-				sentry.CaptureException(err)
+			traceId := metadata.ValueFromIncomingContext(ctx, "traceid")
+			if traceId != nil && len(traceId) != 0 {
+				_, err := hex.Decode(s.TraceID[:], []byte(traceId[0]))
+				if err != nil {
+					sentry.CaptureException(err)
+				}
 			}
 
-			spanId := metadata.ValueFromIncomingContext(ctx, "spanId")
-			_, err = hex.Decode(s.SpanID[:], []byte(spanId[0]))
-			if err != nil {
-				sentry.CaptureException(err)
+			spanId := metadata.ValueFromIncomingContext(ctx, "spanid")
+			if spanId != nil && len(spanId) != 0 {
+				_, err := hex.Decode(s.SpanID[:], []byte(spanId[0]))
+				if err != nil {
+					sentry.CaptureException(err)
+				}
 			}
 		})
 
@@ -71,16 +75,20 @@ func SentryUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		}
 
 		span := sentry.StartSpan(ctx, "grpc.server", func(s *sentry.Span) {
-			traceId := metadata.ValueFromIncomingContext(ctx, "traceId")
-			_, err := hex.Decode(s.TraceID[:], []byte(traceId[0]))
-			if err != nil {
-				sentry.CaptureException(err)
+			traceId := metadata.ValueFromIncomingContext(ctx, "traceid")
+			if traceId != nil && len(traceId) != 0 {
+				_, err := hex.Decode(s.TraceID[:], []byte(traceId[0]))
+				if err != nil {
+					sentry.CaptureException(err)
+				}
 			}
 
-			spanId := metadata.ValueFromIncomingContext(ctx, "spanId")
-			_, err = hex.Decode(s.SpanID[:], []byte(spanId[0]))
-			if err != nil {
-				sentry.CaptureException(err)
+			spanId := metadata.ValueFromIncomingContext(ctx, "spanid")
+			if spanId != nil && len(spanId) != 0 {
+				_, err := hex.Decode(s.SpanID[:], []byte(spanId[0]))
+				if err != nil {
+					sentry.CaptureException(err)
+				}
 			}
 		})
 

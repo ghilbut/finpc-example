@@ -37,8 +37,8 @@ export const appRouter = router({
 
             const metadata = new Metadata();
             if (span) {
-                metadata.set('taraceId', span.traceId);
-                metadata.set('spacId', span.spanId);
+                metadata.set('traceid', span.traceId);
+                metadata.set('spanid', span.spanId);
             }
 
             board.listSubject({}, metadata, (err, subjectList) => {

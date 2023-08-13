@@ -40,14 +40,6 @@ func main() {
 
 		*/
 		//},
-		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-			if hint.Context != nil {
-				if ctx, ok := hint.Context.Value(sentry.RequestContextKey).(*fasthttp.RequestCtx); ok {
-					fmt.Println(string(ctx.Request.Host()))
-				}
-			}
-			return event
-		},
 	})
 	if err != nil {
 		log.Fatalf("failed to initialize sentry: %v", err)
