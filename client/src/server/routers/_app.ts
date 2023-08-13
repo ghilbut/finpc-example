@@ -1,4 +1,4 @@
-import {credentials} from '@grpc/grpc-js';
+import {credentials, Metadata} from '@grpc/grpc-js';
 import {z} from 'zod';
 import {Stock, TradingClient} from '~/grpc/trading';
 import {BoardClient, Question, Subject} from '~/grpc/board';
@@ -26,15 +26,29 @@ const board = new BoardClient(`${host}:${port}`, creds, opts);
 
 export const appRouter = router({
     listSubjects: procedure.query(async (): Promise<Subject[]> => {
+
         const subjects: Promise<Subject[]> = new Promise((resolve, reject) => {
-            board.listSubject({}, (err, subjectList) => {
+
+            const parentSpan = Sentry.getCurrentHub().getScope().getSpan();
+            const span = parentSpan && parentSpan.startChild({
+                op: 'grpc.client',
+                description: 'board.listSubject',
+            });
+
+            const metadata = new Metadata();
+            if (span) {
+                metadata.set('taraceId', span.traceId);
+                metadata.set('spacId', span.spanId);
+            }
+
+            board.listSubject({}, metadata, (err, subjectList) => {
                 if (err) {
                     Sentry.captureException(err)
-                    console.error(err);
+                    span && span.setStatus('unknown_error').finish();
                     reject(err);
-                    return;
                 }
 
+                span && span.setStatus('ok').finish();
                 resolve(subjectList.subjectList);
             });
         });
