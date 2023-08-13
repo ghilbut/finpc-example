@@ -44,3 +44,13 @@ variable github_repository {
   type    = string
   default = "finpc-example"
 }
+
+variable sentry_client_dsn {
+  type      = string
+  sensitive = true
+}
+
+variable sentry_server_dsn {
+  type      = string
+  sensitive = true
+}
