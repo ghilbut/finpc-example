@@ -30,6 +30,16 @@ func main() {
 		SampleRate:         1.0,
 		TracesSampleRate:   1.0,
 		ProfilesSampleRate: 1.0,
+		/*todo: database integration.
+		Integrations: func(integrations []sentry.Integration) []sentry.Integration {
+
+		(example)
+		integrations: [new Sentry.Integrations.Postgres({
+		  usePgNative: true // Default: false
+		})],
+
+		*/
+		//},
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			if hint.Context != nil {
 				if ctx, ok := hint.Context.Value(sentry.RequestContextKey).(*fasthttp.RequestCtx); ok {

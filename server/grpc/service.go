@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 	"database/sql"
+	"encoding/hex"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	// external packages
@@ -31,6 +33,20 @@ func SentryStreamInterceptor() grpc.StreamServerInterceptor {
 			ctx = sentry.SetHubOnContext(ctx, hub)
 		}
 
+		span := sentry.StartSpan(ctx, "grpc.server", func(s *sentry.Span) {
+			traceId := metadata.ValueFromIncomingContext(ctx, "traceId")
+			_, err := hex.Decode(s.TraceID[:], []byte(traceId[0]))
+			if err != nil {
+				sentry.CaptureException(err)
+			}
+
+			spanId := metadata.ValueFromIncomingContext(ctx, "spanId")
+			_, err = hex.Decode(s.SpanID[:], []byte(spanId[0]))
+			if err != nil {
+				sentry.CaptureException(err)
+			}
+		})
+
 		span := sentry.StartSpan(ctx, "grpc.server")
 		ctx = span.Context()
 		defer span.Finish()
@@ -55,7 +71,20 @@ func SentryUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 			ctx = sentry.SetHubOnContext(ctx, hub)
 		}
 
-		span := sentry.StartSpan(ctx, "grpc.server")
+		span := sentry.StartSpan(ctx, "grpc.server", func(s *sentry.Span) {
+			traceId := metadata.ValueFromIncomingContext(ctx, "traceId")
+			_, err := hex.Decode(s.TraceID[:], []byte(traceId[0]))
+			if err != nil {
+				sentry.CaptureException(err)
+			}
+
+			spanId := metadata.ValueFromIncomingContext(ctx, "spanId")
+			_, err = hex.Decode(s.SpanID[:], []byte(spanId[0]))
+			if err != nil {
+				sentry.CaptureException(err)
+			}
+		})
+
 		ctx = span.Context()
 		defer span.Finish()
 
