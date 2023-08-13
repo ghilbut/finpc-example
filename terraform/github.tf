@@ -3,16 +3,10 @@
 ##  Github Actions - Secrets and Variables
 ##
 
-resource github_actions_variable debug_actions {
-  repository    = var.github_repository
-  variable_name = "ACTIONS_STEP_DEBUG"
-  value         = var.github_debug_actions
-}
-
 resource github_actions_variable enable_actions {
   repository    = var.github_repository
-  variable_name = "ENABLE_GITHUB_ACTIONS"
-  value         = var.github_enable_actions
+  variable_name = "ACTIONS_ENABLE"
+  value         = var.github_actions_enable
 }
 
 resource github_actions_variable project_name {

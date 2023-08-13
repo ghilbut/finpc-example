@@ -30,12 +30,7 @@ variable github_token {
   sensitive = true
 }
 
-variable github_debug_actions {
-  type    = bool
-  default = false
-}
-
-variable github_enable_actions {
+variable github_actions_enable {
   type    = bool
   default = true
 }
