@@ -2,7 +2,6 @@ import Link from 'next/link';
 import {trpc} from '~/utils/trpc'
 import * as Sentry from '@sentry/nextjs';
 
-
 export default function Home() {
     const {data} = trpc.listSubjects.useQuery();
 
