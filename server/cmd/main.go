@@ -3,16 +3,18 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	sentryfasthttp "github.com/getsentry/sentry-go/fasthttp"
 	"net"
 	"os"
 	"sync"
 	"time"
 
+	// external packages
 	"github.com/getsentry/sentry-go"
+	sentryfasthttp "github.com/getsentry/sentry-go/fasthttp"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
+
 	// project packages
 	. "github.com/ghilbut/finpc/grpc"
 	. "github.com/ghilbut/finpc/rest"
@@ -22,11 +24,12 @@ func main() {
 	log.SetLevel(log.TraceLevel)
 
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn:              "https://a434bb6a801a4304a2ab160ae5966324@o4505685110423552.ingest.sentry.io/4505685114748928",
-		Debug:            true,
-		EnableTracing:    true,
-		SampleRate:       0.25,
-		TracesSampleRate: 1.0,
+		Dsn:                "https://a434bb6a801a4304a2ab160ae5966324@o4505685110423552.ingest.sentry.io/4505685114748928",
+		Debug:              true,
+		EnableTracing:      true,
+		SampleRate:         1.0,
+		TracesSampleRate:   1.0,
+		ProfilesSampleRate: 1.0,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			if hint.Context != nil {
 				if ctx, ok := hint.Context.Value(sentry.RequestContextKey).(*fasthttp.RequestCtx); ok {
@@ -43,7 +46,7 @@ func main() {
 
 	db, err := OpenDatabase()
 	if err != nil {
-		sentry.CaptureMessage(err.Error())
+		sentry.CaptureException(err)
 		log.Fatal(err)
 	}
 	defer db.Close()
@@ -61,7 +64,7 @@ func main() {
 		log.Printf("run RESTful server on port %d", port)
 
 		if err := fasthttp.ListenAndServe(addr, fastHTTPHandler); err != nil {
-			sentry.CaptureMessage(err.Error())
+			sentry.CaptureException(err)
 			log.Fatalf("failed to run RESTful server: %v", err)
 		}
 	}()
@@ -72,7 +75,7 @@ func main() {
 
 		listen, err := net.Listen("tcp4", addr)
 		if err != nil {
-			sentry.CaptureMessage(err.Error())
+			sentry.CaptureException(err)
 			log.Fatalf("failed to listen: %v", err)
 		}
 
@@ -80,7 +83,7 @@ func main() {
 
 		log.Printf("run gRPC server on port %d", port)
 		if err := grpc.Serve(listen); err != nil {
-			sentry.CaptureMessage(err.Error())
+			sentry.CaptureException(err)
 			log.Fatalf("failed to run gRPC server: %v", err)
 		}
 	}()
