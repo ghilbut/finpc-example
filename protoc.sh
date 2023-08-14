@@ -9,5 +9,4 @@ protoc \
   --plugin protoc-gen-ts_proto=./client/node_modules/.bin/protoc-gen-ts_proto \
   --ts_proto_opt outputServices=grpc-js,env=node,esModuleInterop=true \
   --ts_proto_out ./client/src/grpc \
-  trading.proto \
   board.proto

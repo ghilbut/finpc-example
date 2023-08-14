@@ -1,9 +1,8 @@
 import {credentials, Metadata} from '@grpc/grpc-js';
+import * as Sentry from '@sentry/nextjs';
 import {z} from 'zod';
-import {Stock, TradingClient} from '~/grpc/trading';
 import {BoardClient, Question, Subject} from '~/grpc/board';
 import {procedure, router} from '../trpc';
-import * as Sentry from '@sentry/nextjs';
 
 const host = process.env.GRPC_HOST || '127.0.0.1';
 const port = process.env.GRPC_PORT || '9095';
@@ -21,7 +20,6 @@ console.log('GRPC_INSECURE: ', process.env.GRPC_INSECURE || 'false');
 console.log('GRPC_HOST_OVERRIDE: ', process.env.GRPC_HOST_OVERRIDE || '');
 console.log('GRPC_OPTIONS: ', opts);
 
-const trading = new TradingClient(`${host}:${port}`, creds, opts);
 const board = new BoardClient(`${host}:${port}`, creds, opts);
 
 export const appRouter = router({
@@ -127,22 +125,6 @@ export const appRouter = router({
                 }
             });
         });
-    }),
-
-    getStockList: procedure.query(async (): Promise<Stock[]> => {
-        const stocks: Promise<Stock[]> = new Promise((resolve, reject) => {
-            trading.getStockList({}, (err, stockListResp) => {
-                if (err) {
-                    Sentry.captureException(err)
-                    console.error(err);
-                    reject(err);
-                    return;
-                }
-
-                resolve(stockListResp.stockList);
-            });
-        });
-        return stocks;
     }),
 });
 
