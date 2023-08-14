@@ -95,12 +95,20 @@ resource aws_ecs_task_definition server {
           {
             "name": "PG_SSLMODE",
             "value": "require"
+          },
+          {
+            "name": "SENTRY_ENVIRONMET",
+            "value": "ecs"
           }
         ],
         "secrets": [
           {
             "name": "PG_PASSWORD",
             "valueFrom": "${aws_secretsmanager_secret.postgres_password.arn}"
+          },
+          {
+            "name": "SENTRY_DSN",
+            "valueFrom": "${aws_secretsmanager_secret.sentry_server_dsn.arn}"
           }
         ],
         "portMappings": [
@@ -185,6 +193,16 @@ resource aws_secretsmanager_secret postgres_password {
 resource aws_secretsmanager_secret_version postgres_password {
   secret_id     = aws_secretsmanager_secret.postgres_password.id
   secret_string = random_password.rds.result
+}
+
+resource aws_secretsmanager_secret sentry_server_dsn {
+  name = "${var.project}-sentry-server-dsn"
+  recovery_window_in_days = 0
+}
+
+resource aws_secretsmanager_secret_version sentry_server_dsn {
+  secret_id     = aws_secretsmanager_secret.sentry_server_dsn.id
+  secret_string = var.sentry_server_dsn
 }
 
 ################################################################

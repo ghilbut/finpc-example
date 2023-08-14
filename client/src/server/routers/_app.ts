@@ -27,13 +27,13 @@ const board = new BoardClient(`${host}:${port}`, creds, opts);
 export const appRouter = router({
     listSubjects: procedure.query(async (): Promise<Subject[]> => {
 
-        const subjects: Promise<Subject[]> = new Promise((resolve, reject) => {
+        const parentSpan = Sentry.getCurrentHub().getScope().getSpan();
+        const span = parentSpan && parentSpan.startChild({
+            op: 'grpc.client',
+            description: 'board.listSubject',
+        });
 
-            const parentSpan = Sentry.getCurrentHub().getScope().getSpan();
-            const span = parentSpan && parentSpan.startChild({
-                op: 'grpc.client',
-                description: 'board.listSubject',
-            });
+        const subjects: Promise<Subject[]> = new Promise((resolve, reject) => {
 
             const metadata = new Metadata();
             if (span) {

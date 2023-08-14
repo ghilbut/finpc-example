@@ -5,7 +5,7 @@
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: "https://8bfb9ce2ae9f33673b99ea874f755e98@o4505685110423552.ingest.sentry.io/4505685292613632",
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || '',
 
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 1,
@@ -28,4 +28,6 @@ Sentry.init({
       blockAllMedia: true,
     }),
   ],
+
+  environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || 'unknown',
 });

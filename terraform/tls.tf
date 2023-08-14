@@ -58,26 +58,3 @@ resource tls_locally_signed_cert server {
     "client_auth",
   ]
 }
-
-##--------------------------------------------------------------
-##  testable
-
-# resource local_file ca_key {
-#   content  = tls_private_key.ca.private_key_pem
-#   filename = "${path.module}/ca-key.pem"
-# }
-
-resource local_file ca_cert {
-  content  = tls_self_signed_cert.ca.cert_pem
-  filename = "${path.module}/../client/ca-cert.pem"
-}
-
-resource local_file server_key {
-  content  = tls_private_key.server.private_key_pem
-  filename = "${path.module}/../server/server-key.pem"
-}
-
-resource local_file server_cert {
-  content  = tls_locally_signed_cert.server.cert_pem
-  filename = "${path.module}/../server/server-cert.pem"
-}

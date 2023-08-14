@@ -20,33 +20,29 @@ import (
 	. "github.com/ghilbut/finpc/rest"
 )
 
+func init() {
+	basepath, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+
+	if env := getEnvValue("ENVIRONMENT", ""); env != "" {
+		loadEnvs(basepath, ".env."+env+".local")
+		loadEnvs(basepath, ".env."+env)
+	}
+	loadEnvs(basepath, ".env.local")
+	loadEnvs(basepath, ".env")
+}
+
 func main() {
 	log.SetLevel(log.TraceLevel)
 
-	err := sentry.Init(sentry.ClientOptions{
-		Dsn:                "https://a434bb6a801a4304a2ab160ae5966324@o4505685110423552.ingest.sentry.io/4505685114748928",
-		Debug:              true,
-		EnableTracing:      true,
-		SampleRate:         1.0,
-		TracesSampleRate:   1.0,
-		ProfilesSampleRate: 1.0,
-		/*todo: database integration.
-		Integrations: func(integrations []sentry.Integration) []sentry.Integration {
-
-		(example)
-		integrations: [new Sentry.Integrations.Postgres({
-		  usePgNative: true // Default: false
-		})],
-
-		*/
-		//},
-	})
-	if err != nil {
+	if err := initSentry(); err != nil {
 		log.Fatalf("failed to initialize sentry: %v", err)
 	}
 	defer sentry.Flush(2 * time.Second)
 
-	db, err := OpenDatabase()
+	db, err := openDatabase()
 	if err != nil {
 		sentry.CaptureException(err)
 		log.Fatal(err)
@@ -93,7 +89,7 @@ func main() {
 	wg.Wait()
 }
 
-func OpenDatabase() (*sql.DB, error) {
+func openDatabase() (*sql.DB, error) {
 
 	host := os.Getenv("PG_HOST")
 	if host == "" {
@@ -128,4 +124,35 @@ func OpenDatabase() (*sql.DB, error) {
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", host, port, user, pw, db, ssl)
 	return sql.Open("postgres", dsn)
+}
+
+func initSentry() error {
+	sentryDsn := getEnvValue("SENTRY_DSN", "")
+	hostname := getEnvValue("HOSTNAME", "unknown")
+	environment := getEnvValue("SENTRY_ENVIRONMENT", "localhost")
+
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn:                sentryDsn,
+		Debug:              true,
+		EnableTracing:      true,
+		SampleRate:         1.0,
+		TracesSampleRate:   1.0,
+		ProfilesSampleRate: 1.0,
+
+		/*todo: database integration.
+		  Integrations: func(integrations []sentry.Integration) []sentry.Integration {
+
+		  (example)
+		  integrations: [new Sentry.Integrations.Postgres({
+		    usePgNative: true // Default: false
+		  })],
+
+		*/
+		//},
+
+		ServerName:  hostname,
+		Environment: environment,
+	})
+
+	return err
 }

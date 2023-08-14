@@ -27,6 +27,12 @@ resource github_actions_secret aws_iam_role_for_actions {
   plaintext_value = module.iam_github_oidc_role.arn
 }
 
+resource github_actions_secret sentry_dsn {
+  repository      = var.github_repository
+  secret_name     = "SENTRY_CLIENT_DSN"
+  plaintext_value = var.sentry_client_dsn
+}
+
 ################################################################
 ##
 ##  AWS IAM  - Role for AWS ECR and ECS services

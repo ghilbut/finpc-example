@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	// external packages
 	"github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
@@ -17,6 +18,11 @@ type Board struct {
 }
 
 func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*SubjectList, error) {
+	tx := sentry.TransactionFromContext(ctx)
+	span := tx.StartChild("board.ListSubject")
+	span.Status = sentry.SpanStatusOK
+	defer span.Finish()
+
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	rows, err := db.Query("SELECT id, title, enabled FROM subject ORDER BY id;")

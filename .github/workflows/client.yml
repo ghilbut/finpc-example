@@ -44,6 +44,9 @@ jobs:
 
     - name: Build
       run: yarn build
+      env:
+        NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_CLIENT_DSN }}
+        NEXT_PUBLIC_SENTRY_ENVIRONMENT: ecs
       working-directory: ${{ env.WORKDIR }}
 
     - name: Configure AWS credentials
@@ -51,7 +54,7 @@ jobs:
       with:
         aws-region: ${{ vars.AWS_REGION }}
         role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-        role-session-name: github-actions-${{ vars.PROJECT_NAME }}-server
+        role-session-name: github-actions-${{ vars.PROJECT_NAME }}-client
 
     - name: Login to AWS ECR
       id:   ecr
