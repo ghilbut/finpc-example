@@ -28,7 +28,7 @@ export const appRouter = router({
         const parentSpan = Sentry.getCurrentHub().getScope().getSpan();
         const span = parentSpan && parentSpan.startChild({
             op: 'grpc.client',
-            description: 'board.listSubject',
+            description: '/board.Board/ListSubjects',
         });
 
         const subjects: Promise<Subject[]> = new Promise((resolve, reject) => {
@@ -39,7 +39,7 @@ export const appRouter = router({
                 metadata.set('spanid', span.spanId);
             }
 
-            board.listSubject({}, metadata, (err, subjectList) => {
+            board.listSubjects({}, metadata, (err, subjectList) => {
                 if (err) {
                     Sentry.captureException(err)
                     span && span.setStatus('unknown_error').finish();
@@ -79,7 +79,7 @@ export const appRouter = router({
         })
     ).query(async ({input}): Promise<Question[]> => {
         const questions: Promise<Question[]> = new Promise((resolve, reject) => {
-            board.listQuestion(input, (err, questionList) => {
+            board.listQuestions(input, (err, questionList) => {
                 if (err) {
                     Sentry.captureException(err)
                     console.error(err);

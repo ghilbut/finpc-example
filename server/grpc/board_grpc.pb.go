@@ -19,14 +19,14 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BoardClient interface {
+	ListSubjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error)
 	CreateSubject(ctx context.Context, in *NewSubject, opts ...grpc.CallOption) (*Subject, error)
 	DeleteSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	ListSubject(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error)
 	GetSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*Subject, error)
+	ListQuestions(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error)
 	CreateQuestion(ctx context.Context, in *NewQuestion, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetQuestion(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*Question, error)
-	ListQuestion(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error)
 	Like(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Unlike(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -37,6 +37,15 @@ type boardClient struct {
 
 func NewBoardClient(cc grpc.ClientConnInterface) BoardClient {
 	return &boardClient{cc}
+}
+
+func (c *boardClient) ListSubjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error) {
+	out := new(SubjectList)
+	err := c.cc.Invoke(ctx, "/board.Board/ListSubjects", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *boardClient) CreateSubject(ctx context.Context, in *NewSubject, opts ...grpc.CallOption) (*Subject, error) {
@@ -57,18 +66,18 @@ func (c *boardClient) DeleteSubject(ctx context.Context, in *SubjectId, opts ...
 	return out, nil
 }
 
-func (c *boardClient) ListSubject(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SubjectList, error) {
-	out := new(SubjectList)
-	err := c.cc.Invoke(ctx, "/board.Board/ListSubject", in, out, opts...)
+func (c *boardClient) GetSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*Subject, error) {
+	out := new(Subject)
+	err := c.cc.Invoke(ctx, "/board.Board/GetSubject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *boardClient) GetSubject(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*Subject, error) {
-	out := new(Subject)
-	err := c.cc.Invoke(ctx, "/board.Board/GetSubject", in, out, opts...)
+func (c *boardClient) ListQuestions(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error) {
+	out := new(QuestionList)
+	err := c.cc.Invoke(ctx, "/board.Board/ListQuestions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -102,15 +111,6 @@ func (c *boardClient) GetQuestion(ctx context.Context, in *QuestionId, opts ...g
 	return out, nil
 }
 
-func (c *boardClient) ListQuestion(ctx context.Context, in *SubjectId, opts ...grpc.CallOption) (*QuestionList, error) {
-	out := new(QuestionList)
-	err := c.cc.Invoke(ctx, "/board.Board/ListQuestion", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *boardClient) Like(ctx context.Context, in *QuestionId, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/board.Board/Like", in, out, opts...)
@@ -133,14 +133,14 @@ func (c *boardClient) Unlike(ctx context.Context, in *QuestionId, opts ...grpc.C
 // All implementations must embed UnimplementedBoardServer
 // for forward compatibility
 type BoardServer interface {
+	ListSubjects(context.Context, *emptypb.Empty) (*SubjectList, error)
 	CreateSubject(context.Context, *NewSubject) (*Subject, error)
 	DeleteSubject(context.Context, *SubjectId) (*emptypb.Empty, error)
-	ListSubject(context.Context, *emptypb.Empty) (*SubjectList, error)
 	GetSubject(context.Context, *SubjectId) (*Subject, error)
+	ListQuestions(context.Context, *SubjectId) (*QuestionList, error)
 	CreateQuestion(context.Context, *NewQuestion) (*emptypb.Empty, error)
 	DeleteQuestion(context.Context, *QuestionId) (*emptypb.Empty, error)
 	GetQuestion(context.Context, *QuestionId) (*Question, error)
-	ListQuestion(context.Context, *SubjectId) (*QuestionList, error)
 	Like(context.Context, *QuestionId) (*emptypb.Empty, error)
 	Unlike(context.Context, *QuestionId) (*emptypb.Empty, error)
 	mustEmbedUnimplementedBoardServer()
@@ -150,17 +150,20 @@ type BoardServer interface {
 type UnimplementedBoardServer struct {
 }
 
+func (UnimplementedBoardServer) ListSubjects(context.Context, *emptypb.Empty) (*SubjectList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSubjects not implemented")
+}
 func (UnimplementedBoardServer) CreateSubject(context.Context, *NewSubject) (*Subject, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSubject not implemented")
 }
 func (UnimplementedBoardServer) DeleteSubject(context.Context, *SubjectId) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSubject not implemented")
 }
-func (UnimplementedBoardServer) ListSubject(context.Context, *emptypb.Empty) (*SubjectList, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListSubject not implemented")
-}
 func (UnimplementedBoardServer) GetSubject(context.Context, *SubjectId) (*Subject, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubject not implemented")
+}
+func (UnimplementedBoardServer) ListQuestions(context.Context, *SubjectId) (*QuestionList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListQuestions not implemented")
 }
 func (UnimplementedBoardServer) CreateQuestion(context.Context, *NewQuestion) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateQuestion not implemented")
@@ -170,9 +173,6 @@ func (UnimplementedBoardServer) DeleteQuestion(context.Context, *QuestionId) (*e
 }
 func (UnimplementedBoardServer) GetQuestion(context.Context, *QuestionId) (*Question, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetQuestion not implemented")
-}
-func (UnimplementedBoardServer) ListQuestion(context.Context, *SubjectId) (*QuestionList, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListQuestion not implemented")
 }
 func (UnimplementedBoardServer) Like(context.Context, *QuestionId) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Like not implemented")
@@ -191,6 +191,24 @@ type UnsafeBoardServer interface {
 
 func RegisterBoardServer(s grpc.ServiceRegistrar, srv BoardServer) {
 	s.RegisterService(&Board_ServiceDesc, srv)
+}
+
+func _Board_ListSubjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServer).ListSubjects(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/board.Board/ListSubjects",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServer).ListSubjects(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Board_CreateSubject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -229,24 +247,6 @@ func _Board_DeleteSubject_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Board_ListSubject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BoardServer).ListSubject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/board.Board/ListSubject",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BoardServer).ListSubject(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Board_GetSubject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SubjectId)
 	if err := dec(in); err != nil {
@@ -261,6 +261,24 @@ func _Board_GetSubject_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BoardServer).GetSubject(ctx, req.(*SubjectId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Board_ListQuestions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubjectId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServer).ListQuestions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/board.Board/ListQuestions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServer).ListQuestions(ctx, req.(*SubjectId))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -319,24 +337,6 @@ func _Board_GetQuestion_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Board_ListQuestion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SubjectId)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BoardServer).ListQuestion(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/board.Board/ListQuestion",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BoardServer).ListQuestion(ctx, req.(*SubjectId))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Board_Like_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QuestionId)
 	if err := dec(in); err != nil {
@@ -381,6 +381,10 @@ var Board_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BoardServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "ListSubjects",
+			Handler:    _Board_ListSubjects_Handler,
+		},
+		{
 			MethodName: "CreateSubject",
 			Handler:    _Board_CreateSubject_Handler,
 		},
@@ -389,12 +393,12 @@ var Board_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Board_DeleteSubject_Handler,
 		},
 		{
-			MethodName: "ListSubject",
-			Handler:    _Board_ListSubject_Handler,
-		},
-		{
 			MethodName: "GetSubject",
 			Handler:    _Board_GetSubject_Handler,
+		},
+		{
+			MethodName: "ListQuestions",
+			Handler:    _Board_ListQuestions_Handler,
 		},
 		{
 			MethodName: "CreateQuestion",
@@ -407,10 +411,6 @@ var Board_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetQuestion",
 			Handler:    _Board_GetQuestion_Handler,
-		},
-		{
-			MethodName: "ListQuestion",
-			Handler:    _Board_ListQuestion_Handler,
 		},
 		{
 			MethodName: "Like",

@@ -8,8 +8,8 @@ export default function Home() {
 
     const [newQuestion, setNewQuestion] = useState('');
 
-    const subject = trpc.getSubject.useQuery({id: id});
-    const list = trpc.listQuestions.useQuery({id: id});
+    const subject = trpc.getSubject.useQuery({id});
+    const list = trpc.listQuestions.useQuery({id});
 
     const like = trpc.like.useMutation();
     const createQuestion = trpc.createQuestion.useMutation();

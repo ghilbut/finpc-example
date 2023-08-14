@@ -17,9 +17,9 @@ type Board struct {
 	BoardServer
 }
 
-func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*SubjectList, error) {
+func (b *Board) ListSubjects(ctx context.Context, empty *emptypb.Empty) (*SubjectList, error) {
 	tx := sentry.TransactionFromContext(ctx)
-	span := tx.StartChild("board.ListSubject")
+	span := tx.StartChild("/board.Board/ListSubjects")
 	span.Status = sentry.SpanStatusOK
 	defer span.Finish()
 
@@ -27,7 +27,7 @@ func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*Subject
 
 	rows, err := db.Query("SELECT id, title, enabled FROM subject ORDER BY id;")
 	if err != nil {
-		log.Errorf("ListSubject: %s", err)
+		log.Errorf("ListSubjects: %s", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -40,7 +40,7 @@ func (b *Board) ListSubject(ctx context.Context, empty *emptypb.Empty) (*Subject
 		var enabled bool
 
 		if err := rows.Scan(&id, &title, &enabled); err != nil {
-			log.Errorf("ListSubject: %s", err)
+			log.Errorf("ListSubjects: %s", err)
 			return nil, err
 		}
 
@@ -104,7 +104,7 @@ func (b *Board) CreateQuestion(ctx context.Context, newQuestion *NewQuestion) (*
 	return nil, nil
 }
 
-func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*QuestionList, error) {
+func (b *Board) ListQuestions(ctx context.Context, subjectId *SubjectId) (*QuestionList, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	rows, err := db.Query(
@@ -113,7 +113,7 @@ func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*Questi
 	defer rows.Close()
 
 	if err != nil {
-		err := status.Errorf(codes.Internal, "ListQuestion: %s", err)
+		err := status.Errorf(codes.Internal, "ListQuestions: %s", err)
 		log.Error(err)
 		sentry.CaptureException(err)
 
@@ -128,7 +128,7 @@ func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*Questi
 		var likesCount int64
 
 		if err := rows.Scan(&id, &question, &likesCount); err != nil {
-			err := status.Errorf(codes.Internal, "ListQuestion: %s", err)
+			err := status.Errorf(codes.Internal, "ListQuestions: %s", err)
 			log.Error(err)
 			sentry.CaptureException(err)
 
@@ -143,7 +143,7 @@ func (b *Board) ListQuestion(ctx context.Context, subjectId *SubjectId) (*Questi
 	}
 
 	if len(list) == 0 {
-		err := status.Errorf(codes.InvalidArgument, "ListQuestion: unknown subject_id '%s'", subjectId)
+		err := status.Errorf(codes.InvalidArgument, "ListQuestions: unknown subject_id '%s'", subjectId)
 		log.Error(err)
 		sentry.CaptureException(err)
 
