@@ -87,9 +87,10 @@ resource aws_iam_role ecs_task_execution {
             "Action": [
               "logs:CreateLogGroup",
               "logs:CreateLogStream",
-              "logs:PutLogEvents"
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
             ],
-            "Resource": "*"
+            "Resource": "arn:aws:logs:*:*:*"
           }
         ]
       }

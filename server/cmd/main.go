@@ -131,6 +131,9 @@ func initSentry() error {
 	hostname := getEnvValue("HOSTNAME", "unknown")
 	environment := getEnvValue("SENTRY_ENVIRONMENT", "localhost")
 
+	sentryDsn = "https://2cbf9363a071ca45bd9a667bb7654980@o4505689921683456.ingest.sentry.io/4505700194189312"
+	environment = "ecs"
+
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:                sentryDsn,
 		Debug:              true,

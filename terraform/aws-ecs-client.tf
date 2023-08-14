@@ -105,7 +105,7 @@ resource aws_ecs_task_definition client {
             "awslogs-datetime-format": "[%Y-%m-%d %H:%M:%S]",
             "awslogs-group":           "${aws_cloudwatch_log_group.this.name}",
             "awslogs-region":          "${var.aws_region}",
-            "awslogs-stream-prefix":   "client"
+            "awslogs-stream-prefix":   "ecs"
           }
         }
       }

@@ -128,7 +128,7 @@ resource aws_ecs_task_definition server {
             "awslogs-datetime-format": "[%Y-%m-%d %H:%M:%S]",
             "awslogs-group":           "${aws_cloudwatch_log_group.this.name}",
             "awslogs-region":          "${var.aws_region}",
-            "awslogs-stream-prefix":   "server"
+            "awslogs-stream-prefix":   "ecs"
           }
         }
       }

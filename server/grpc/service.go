@@ -33,6 +33,7 @@ func SentryStreamInterceptor() grpc.StreamServerInterceptor {
 		}
 
 		span := sentry.StartTransaction(ctx, info.FullMethod, func(s *sentry.Span) {
+			//s.Name = "finpc-server"
 			s.Op = "grpc.server"
 			s.Description = info.FullMethod
 
@@ -77,6 +78,7 @@ func SentryUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		}
 
 		span := sentry.StartTransaction(ctx, info.FullMethod, func(s *sentry.Span) {
+			s.Name = "finpc-server"
 			s.Op = "grpc.server"
 			s.Description = info.FullMethod
 

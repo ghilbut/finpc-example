@@ -6,7 +6,9 @@ COPY . .
 RUN CGO_ENABLED=0 go build -o server ./cmd
 
 
-FROM scratch as release
+## [NOTE] with scratch, I can see below error
+##       'There was an issue with sending an event: Post "https://xxxxxxxx.ingest.sentry.io/api/xxxxxxxx/envelope/": tls: failed to verify certificate: x509: certificate signed by unknown authority'
+FROM alpine:3.18 as release
 LABEL author="ghilbut@gmail.com"
 
 EXPOSE 8080 9095
