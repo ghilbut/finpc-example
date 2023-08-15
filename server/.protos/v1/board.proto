@@ -8,14 +8,10 @@ option go_package = "github.com/ghilbut/finpc/grpc";
 
 service Board {
   rpc ListSubjects (google.protobuf.Empty) returns (SubjectList);
-  rpc CreateSubject (NewSubject) returns (Subject);
-  rpc DeleteSubject (SubjectId) returns (google.protobuf.Empty);
   rpc GetSubject (SubjectId) returns (Subject);
 
   rpc ListQuestions (SubjectId) returns (QuestionList);
   rpc CreateQuestion (NewQuestion) returns (google.protobuf.Empty);
-  rpc DeleteQuestion (QuestionId) returns (google.protobuf.Empty);
-  rpc GetQuestion (QuestionId) returns (Question);
 
   rpc Like (QuestionId) returns (google.protobuf.Empty);
   rpc Unlike (QuestionId) returns (google.protobuf.Empty);

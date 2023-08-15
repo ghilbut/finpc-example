@@ -98,17 +98,15 @@ export const appRouter = router({
             question: z.string(),
             subjectId: z.number(),
         })
-    ).mutation(async ({input: newQuestion}) => {
+    ).mutation(async ({input: newQuestion})=> {
         new Promise((resolve, reject) => {
-            board.createQuestion(newQuestion, (err, question) => {
+            board.createQuestion(newQuestion, (err, empty) => {
                 if (err) {
                     Sentry.captureException(err)
                     console.error(err);
                     reject(err);
                     return;
                 }
-                
-                resolve(question)
             });
         });
     }),

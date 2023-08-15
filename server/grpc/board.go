@@ -59,6 +59,28 @@ func (b *Board) ListSubjects(ctx context.Context, empty *emptypb.Empty) (*Subjec
 	}, nil
 }
 
+func (b *Board) GetSubject(ctx context.Context, subjectId *SubjectId) (*Subject, error) {
+	db := ctx.Value(DBSession).(*sql.DB)
+
+	rows, err := db.Query("SELECT id, title, enabled FROM subject WHERE id = $1", subjectId.Id)
+	if err != nil {
+		log.Errorf("GetSubject: %s", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	subject := &Subject{}
+
+	for rows.Next() {
+		if err := rows.Scan(&subject.Id, &subject.Title, &subject.Enabled); err != nil {
+			log.Errorf("GetSubject: %s", err)
+			return nil, err
+		}
+	}
+
+	return subject, nil
+}
+
 func (b *Board) CreateQuestion(ctx context.Context, newQuestion *NewQuestion) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
@@ -255,180 +277,6 @@ func subQuestionLikes(db *sql.DB, questionId int64) error {
 	}
 
 	_, err = tx.Stmt(stmt).Exec(questionId)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	tx.Commit()
-	return nil
-}
-
-// spec out
-
-func (b *Board) CreateSubject(ctx context.Context, newSubject *NewSubject) (*Subject, error) {
-	db := ctx.Value(DBSession).(*sql.DB)
-
-	if len(newSubject.GetTitle()) == 0 {
-		log.Errorf("CreateSubject: invalid input 'title'")
-		return nil, errors.New("invalid 'title'")
-	}
-
-	if err := insertSubject(db, newSubject.Title); err != nil {
-		log.Errorf("CreateSubject: %s", err)
-		return nil, err
-	}
-
-	subject, err := selectSubjectByTitle(db, newSubject.Title)
-	if err != nil {
-		log.Errorf("CreateSubject: failed to select created subject. %s", err)
-		return nil, err
-	}
-
-	return subject, nil
-}
-
-func (b *Board) DeleteSubject(ctx context.Context, subjectId *SubjectId) (*emptypb.Empty, error) {
-	db := ctx.Value(DBSession).(*sql.DB)
-
-	if subjectId.GetId() == 0 {
-		log.Errorf("DeleteSubject: invalid subject id;")
-		return nil, errors.New("invalid 'id'")
-	}
-
-	if err := deleteSubject(db, subjectId.Id); err != nil {
-		log.Errorf("DeleteSubject: %s", err)
-		return nil, err
-	}
-
-	return nil, nil
-}
-
-func (b *Board) GetSubject(ctx context.Context, subjectId *SubjectId) (*Subject, error) {
-	db := ctx.Value(DBSession).(*sql.DB)
-
-	rows, err := db.Query("SELECT id, title, enabled FROM subject WHERE id = $1", subjectId.Id)
-	if err != nil {
-		log.Errorf("GetSubject: %s", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	subject := &Subject{}
-
-	for rows.Next() {
-		if err := rows.Scan(&subject.Id, &subject.Title, &subject.Enabled); err != nil {
-			log.Errorf("GetSubject: %s", err)
-			return nil, err
-		}
-	}
-
-	return subject, nil
-}
-
-func (b *Board) DeleteQuestion(ctx context.Context, questionId *QuestionId) (*emptypb.Empty, error) {
-	db := ctx.Value(DBSession).(*sql.DB)
-
-	if questionId.GetId() == 0 {
-		log.Errorf("DeleteQuestion: invalid question id;")
-		return nil, errors.New("invalid 'id'")
-	}
-
-	if err := deleteQuestion(db, questionId.Id); err != nil {
-		log.Errorf("DeleteQuestion: %s", err)
-		return nil, err
-	}
-
-	return nil, nil
-}
-
-func (b *Board) GetQuestion(ctx context.Context, questionId *QuestionId) (*Question, error) {
-	db := ctx.Value(DBSession).(*sql.DB)
-
-	question, err := selectQuestion(db, questionId.Id)
-	if err != nil {
-		log.Errorf("GetQuestion: %s", err)
-		return nil, err
-	}
-
-	return question, nil
-}
-
-func insertSubject(db *sql.DB, title string) error {
-	stmt, err := db.Prepare("INSERT INTO subject(title) VALUES (?)")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Stmt(stmt).Exec(title)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	tx.Commit()
-	return nil
-}
-
-func selectSubjectByTitle(db *sql.DB, title string) (*Subject, error) {
-	rows, err := db.Query("SELECT id, title, enabled FROM subject WHERE title = $1", title)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	subject := &Subject{}
-
-	for rows.Next() {
-		if err := rows.Scan(&subject.Id, &subject.Title, &subject.Enabled); err != nil {
-			return nil, err
-		}
-	}
-
-	return subject, nil
-}
-
-func deleteSubject(db *sql.DB, subjectId int64) error {
-	stmt, err := db.Prepare("DELETE FROM subject WHERE id = $1")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Stmt(stmt).Exec(subjectId)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	tx.Commit()
-	return nil
-}
-
-func deleteQuestion(db *sql.DB, id int64) error {
-	stmt, err := db.Prepare("DELETE FROM question WHERE id = $1")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Stmt(stmt).Exec(id)
 	if err != nil {
 		tx.Rollback()
 		return err
