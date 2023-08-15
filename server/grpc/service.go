@@ -5,12 +5,11 @@ import (
 	"database/sql"
 
 	// external packages
-	"github.com/getsentry/sentry-go"
+	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -33,6 +32,7 @@ func NewGrpcServer(db *sql.DB) *grpc.Server {
 		),
 		grpc.ChainUnaryInterceptor(
 			otelgrpc.UnaryServerInterceptor(),
+			//metadataMiddleware(),
 			DBUnaryServerInterceptor(db),
 		),
 	)
@@ -42,17 +42,20 @@ func NewGrpcServer(db *sql.DB) *grpc.Server {
 	return grpcServer
 }
 
-func toSentrySpanStatus(err error) sentry.SpanStatus {
-	code := status.Code(err)
+func metadataMiddleware() grpc.UnaryServerInterceptor {
+	return func(
+		ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (interface{}, error) {
+		const tpKey = "traceparent"
 
-	switch code {
-	case codes.Internal:
-		return sentry.SpanStatusInternalError
-	case codes.InvalidArgument:
-		return sentry.SpanStatusInvalidArgument
-	case codes.FailedPrecondition:
-		return sentry.SpanStatusFailedPrecondition
-	default:
-		return sentry.SpanStatusUndefined
+		md, ok := metadata.FromIncomingContext(ctx)
+		if ok {
+			log.Info("[gRPC][Metadata] ", tpKey, ": ", md.Get(tpKey))
+		}
+
+		return handler(context.WithValue(ctx, tpKey, md.Get(tpKey)), req)
 	}
 }

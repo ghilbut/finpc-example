@@ -107,6 +107,8 @@ export const appRouter = router({
                     reject(err);
                     return;
                 }
+                
+                resolve(question)
             });
         });
     }),
@@ -117,6 +119,22 @@ export const appRouter = router({
         })).mutation(async ({input}) => {
         new Promise((resolve, reject) => {
             board.like(input, (err, empty) => {
+                if (err) {
+                    Sentry.captureException(err)
+                    console.error(err);
+                    reject(err);
+                    return;
+                }
+            });
+        });
+    }),
+
+    unlike: procedure.input(
+        z.object({
+            id: z.number(),
+        })).mutation(async ({input}) => {
+        new Promise((resolve, reject) => {
+            board.unlike(input, (err, empty) => {
                 if (err) {
                     Sentry.captureException(err)
                     console.error(err);

@@ -7,10 +7,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	// external packages
-	"github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -67,42 +64,28 @@ func (b *Board) CreateQuestion(ctx context.Context, newQuestion *NewQuestion) (*
 
 	subject, err := selectSubject(db, newQuestion.SubjectId)
 	if err != nil {
-		err := status.Errorf(codes.Internal, "CreateQuestion: failed to select subject. %s", err)
-		log.Error(err)
-		sentry.CaptureException(err)
-
+		log.Errorf("CreateQuestion: failed to select subject. %s", err)
 		return nil, err
 	}
 
 	if subject == nil {
-		err := status.Errorf(codes.InvalidArgument, "CreateQuestion: subjectId '%d' is not exists", newQuestion.SubjectId)
-		log.Error(err)
-		sentry.CaptureException(err)
-
+		log.Errorf("CreateQuestion: subjectId '%d' is not exists", newQuestion.SubjectId)
 		return nil, errors.New("this subject is not exists")
 	}
 
 	if subject.Enabled == false {
-		err := status.Errorf(codes.FailedPrecondition, "CreateQuestion: subjectId '%d' is disable", subject.Id)
-		log.Error(err)
-		sentry.CaptureException(err)
-
+		log.Errorf("CreateQuestion: subjectId '%d' is disable", subject.Id)
 		return nil, err
 	}
 
 	if len(newQuestion.GetQuestion()) == 0 {
-		err := status.Errorf(codes.InvalidArgument, "CreateQuestion: empty input 'question'")
-		log.Error(err)
-		sentry.CaptureException(err)
-
+		log.Errorf("CreateQuestion: empty input 'question'")
 		return nil, err
 	}
 
 	err = insertQuestion(db, newQuestion.Question, newQuestion.SubjectId)
 	if err != nil {
-		err := status.Errorf(codes.Internal, "CreateQuestion: %s", err)
-		log.Error(err)
-		sentry.CaptureException(err)
+		log.Errorf("CreateQuestion: %s", err)
 
 		return nil, err
 	}
@@ -119,10 +102,7 @@ func (b *Board) ListQuestions(ctx context.Context, subjectId *SubjectId) (*Quest
 	defer rows.Close()
 
 	if err != nil {
-		err := status.Errorf(codes.Internal, "ListQuestions: %s", err)
-		log.Error(err)
-		sentry.CaptureException(err)
-
+		log.Errorf("ListQuestions: %s", err)
 		return nil, err
 	}
 
@@ -134,10 +114,7 @@ func (b *Board) ListQuestions(ctx context.Context, subjectId *SubjectId) (*Quest
 		var likesCount int64
 
 		if err := rows.Scan(&id, &question, &likesCount); err != nil {
-			err := status.Errorf(codes.Internal, "ListQuestions: %s", err)
-			log.Error(err)
-			sentry.CaptureException(err)
-
+			log.Errorf("ListQuestions: %s", err)
 			return nil, err
 		}
 
@@ -146,14 +123,6 @@ func (b *Board) ListQuestions(ctx context.Context, subjectId *SubjectId) (*Quest
 			Question:   question,
 			LikesCount: likesCount,
 		})
-	}
-
-	if len(list) == 0 {
-		err := status.Errorf(codes.InvalidArgument, "ListQuestions: unknown subject_id '%s'", subjectId)
-		log.Error(err)
-		sentry.CaptureException(err)
-
-		return nil, err
 	}
 
 	return &QuestionList{
@@ -165,10 +134,7 @@ func (b *Board) Like(ctx context.Context, questionId *QuestionId) (*emptypb.Empt
 	db := ctx.Value(DBSession).(*sql.DB)
 
 	if err := addQuestionLikes(db, questionId.Id); err != nil {
-		err := status.Errorf(codes.Internal, "Like: %s", err)
-		log.Error(err)
-		sentry.CaptureException(err)
-
+		log.Errorf("Like: %s", err)
 		return nil, err
 	}
 
@@ -178,11 +144,18 @@ func (b *Board) Like(ctx context.Context, questionId *QuestionId) (*emptypb.Empt
 func (b *Board) Unlike(ctx context.Context, questionId *QuestionId) (*emptypb.Empty, error) {
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	if err := subQuestionLikes(db, questionId.Id); err != nil {
-		err := status.Errorf(codes.Internal, "Unlike: %s", err)
-		log.Error(err)
-		sentry.CaptureException(err)
+	question, err := selectQuestion(db, questionId.Id)
+	if err != nil {
+		log.Errorf("Unlike: %s", err)
+		return nil, err
+	}
+	if question.LikesCount <= 0 {
+		log.Errorf("Unlike: like count can not be negative")
+		return nil, err
+	}
 
+	if err := subQuestionLikes(db, questionId.Id); err != nil {
+		log.Errorf("Unlike: %s", err)
 		return nil, err
 	}
 
@@ -229,8 +202,25 @@ func insertQuestion(db *sql.DB, question string, subjectId int64) error {
 	return nil
 }
 
+func selectQuestion(db *sql.DB, id int64) (*Question, error) {
+	rows, err := db.Query("SELECT id, question, likes FROM question WHERE id = $1", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	question := &Question{}
+
+	for rows.Next() {
+		if err := rows.Scan(&question.Id, &question.Question, &question.LikesCount); err != nil {
+			return nil, err
+		}
+	}
+
+	return question, nil
+}
+
 func addQuestionLikes(db *sql.DB, questionId int64) error {
-	//stmt, err := db.Prepare("INSERT INTO likes(user_id, question_id) VALUES (?, ?)")
 	stmt, err := db.Prepare("UPDATE question SET likes = likes + 1 WHERE id = $1")
 	if err != nil {
 		return err
@@ -253,7 +243,6 @@ func addQuestionLikes(db *sql.DB, questionId int64) error {
 }
 
 func subQuestionLikes(db *sql.DB, questionId int64) error {
-	//stmt, err := db.Prepare("DELETE FROM likes WHERE user_id = ? AND question_id = ?")
 	stmt, err := db.Prepare("UPDATE question SET likes = likes - 1 WHERE id = $1")
 	if err != nil {
 		return err
@@ -447,22 +436,4 @@ func deleteQuestion(db *sql.DB, id int64) error {
 
 	tx.Commit()
 	return nil
-}
-
-func selectQuestion(db *sql.DB, id int64) (*Question, error) {
-	rows, err := db.Query("SELECT id, question, likes FROM question WHERE id = $1", id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	question := &Question{}
-
-	for rows.Next() {
-		if err := rows.Scan(&question.Id, &question.Question, &question.LikesCount); err != nil {
-			return nil, err
-		}
-	}
-
-	return question, nil
 }
