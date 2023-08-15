@@ -18,14 +18,14 @@ type Board struct {
 }
 
 func (b *Board) ListSubjects(ctx context.Context, empty *emptypb.Empty) (*SubjectList, error) {
-	tx := sentry.TransactionFromContext(ctx)
-	span := tx.StartChild("/board.Board/ListSubjects")
-	span.Status = sentry.SpanStatusOK
-	defer span.Finish()
+	//tx := sentry.TransactionFromContext(ctx)
+	//span := tx.StartChild("/board.Board/ListSubjects")
+	//span.Status = sentry.SpanStatusOK
+	//defer span.Finish()
 
 	db := ctx.Value(DBSession).(*sql.DB)
 
-	rows, err := db.Query("SELECT id, title, enabled FROM subject ORDER BY id;")
+	rows, err := db.QueryContext(ctx, "SELECT id, title, enabled FROM subject ORDER BY id;")
 	if err != nil {
 		log.Errorf("ListSubjects: %s", err)
 		return nil, err
