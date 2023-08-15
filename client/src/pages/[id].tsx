@@ -12,6 +12,7 @@ export default function Home() {
     const list = trpc.listQuestions.useQuery({id});
 
     const like = trpc.like.useMutation();
+    const unlike = trpc.unlike.useMutation();
     const createQuestion = trpc.createQuestion.useMutation();
 
     async function doRefresh() {
@@ -22,6 +23,12 @@ export default function Home() {
     async function doLike(id: number) {
         console.log(`doLike(qid: ${id})`);
         await like.mutate({id});
+        await list.refetch();
+    }
+
+    async function undoLike(id: number) {
+        console.log(`undoLike(qid: ${id})`);
+        await unlike.mutate({id});
         await list.refetch();
     }
 
@@ -43,8 +50,12 @@ export default function Home() {
                             {q.question}&nbsp;&nbsp;
                             ({q.likesCount})&nbsp;&nbsp;
                             <button onClick={() => {
-                                doLike(q.id)
+                                doLike(q.id);
                             }}>Like
+                            </button>
+                            <button onClick={() => {
+                                undoLike(q.id)
+                            }}>Cancle
                             </button>
                         </li>);
                     })}

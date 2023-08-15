@@ -28,15 +28,15 @@ export const appRouter = router({
         const parentSpan = Sentry.getCurrentHub().getScope().getSpan();
         const span = parentSpan && parentSpan.startChild({
             op: 'grpc.client',
-            description: '/board.Board/ListSubjects',
+            description: 'board.Board/ListSubjects',
         });
 
         const subjects: Promise<Subject[]> = new Promise((resolve, reject) => {
 
             const metadata = new Metadata();
             if (span) {
-                metadata.set('traceid', span.traceId);
-                metadata.set('spanid', span.spanId);
+                const tp = `00-${span.traceId}-${span.spanId}-01`;
+                metadata.set('traceparent', tp);
             }
 
             board.listSubjects({}, metadata, (err, subjectList) => {
@@ -98,9 +98,9 @@ export const appRouter = router({
             question: z.string(),
             subjectId: z.number(),
         })
-    ).mutation(async ({input: newQuestion}) => {
+    ).mutation(async ({input: newQuestion})=> {
         new Promise((resolve, reject) => {
-            board.createQuestion(newQuestion, (err, question) => {
+            board.createQuestion(newQuestion, (err, empty) => {
                 if (err) {
                     Sentry.captureException(err)
                     console.error(err);
@@ -117,6 +117,22 @@ export const appRouter = router({
         })).mutation(async ({input}) => {
         new Promise((resolve, reject) => {
             board.like(input, (err, empty) => {
+                if (err) {
+                    Sentry.captureException(err)
+                    console.error(err);
+                    reject(err);
+                    return;
+                }
+            });
+        });
+    }),
+
+    unlike: procedure.input(
+        z.object({
+            id: z.number(),
+        })).mutation(async ({input}) => {
+        new Promise((resolve, reject) => {
+            board.unlike(input, (err, empty) => {
                 if (err) {
                     Sentry.captureException(err)
                     console.error(err);

@@ -122,7 +122,7 @@ func NewGrpcServer(db *sql.DB) *grpc.Server {
 	creds := insecure.NewCredentials()
 	grpcServer := grpc.NewServer(
 		grpc.Creds(creds),
-		grpc.StreamInterceptor(
+		grpc.ChainStreamInterceptor(
 			SentryStreamInterceptor(),
 		),
 		grpc.ChainUnaryInterceptor(
