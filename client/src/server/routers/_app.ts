@@ -28,15 +28,15 @@ export const appRouter = router({
         const parentSpan = Sentry.getCurrentHub().getScope().getSpan();
         const span = parentSpan && parentSpan.startChild({
             op: 'grpc.client',
-            description: '/board.Board/ListSubjects',
+            description: 'board.Board/ListSubjects',
         });
 
         const subjects: Promise<Subject[]> = new Promise((resolve, reject) => {
 
             const metadata = new Metadata();
             if (span) {
-                metadata.set('traceid', span.traceId);
-                metadata.set('spanid', span.spanId);
+                const tp = `00-${span.traceId}-${span.spanId}-01`;
+                metadata.set('traceparent', tp);
             }
 
             board.listSubjects({}, metadata, (err, subjectList) => {
