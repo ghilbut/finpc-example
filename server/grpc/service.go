@@ -18,6 +18,7 @@ import (
 
 const (
 	DBSession string = "dbSession"
+	tpKey     string = "traceparent"
 )
 
 func SentryStreamInterceptor() grpc.StreamServerInterceptor {
@@ -34,17 +35,11 @@ func SentryStreamInterceptor() grpc.StreamServerInterceptor {
 			s.Op = "grpc.server"
 			s.Description = info.FullMethod
 
-			traceId := metadata.ValueFromIncomingContext(ctx, "traceid")
-			if traceId != nil && len(traceId) != 0 {
-				_, err := hex.Decode(s.TraceID[:], []byte(traceId[0]))
-				if err != nil {
-					sentry.CaptureException(err)
-				}
-			}
+			traceParent := metadata.ValueFromIncomingContext(ctx, tpKey)
+			if traceParent != nil && len(traceParent) != 0 {
+				log.Info("[gRPC][Metadata] ", tpKey, ": ", traceParent[0])
 
-			spanId := metadata.ValueFromIncomingContext(ctx, "spanid")
-			if spanId != nil && len(spanId) != 0 {
-				_, err := hex.Decode(s.SpanID[:], []byte(spanId[0]))
+				_, err := hex.Decode(s.TraceID[:], []byte(traceParent[0]))
 				if err != nil {
 					sentry.CaptureException(err)
 				}
@@ -79,17 +74,11 @@ func SentryUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 			s.Op = "grpc.server"
 			s.Description = info.FullMethod
 
-			traceId := metadata.ValueFromIncomingContext(ctx, "traceid")
-			if traceId != nil && len(traceId) != 0 {
-				_, err := hex.Decode(s.TraceID[:], []byte(traceId[0]))
-				if err != nil {
-					sentry.CaptureException(err)
-				}
-			}
+			traceParent := metadata.ValueFromIncomingContext(ctx, tpKey)
+			if traceParent != nil && len(traceParent) != 0 {
+				log.Info("[gRPC][Metadata] ", tpKey, ": ", traceParent[0])
 
-			spanId := metadata.ValueFromIncomingContext(ctx, "spanid")
-			if spanId != nil && len(spanId) != 0 {
-				_, err := hex.Decode(s.ParentSpanID[:], []byte(spanId[0]))
+				_, err := hex.Decode(s.ParentSpanID[:], []byte(traceParent[0]))
 				if err != nil {
 					sentry.CaptureException(err)
 				}

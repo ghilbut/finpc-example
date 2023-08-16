@@ -138,20 +138,8 @@ func initSentry() error {
 		SampleRate:         1.0,
 		TracesSampleRate:   1.0,
 		ProfilesSampleRate: 1.0,
-
-		/*todo: database integration.
-		  Integrations: func(integrations []sentry.Integration) []sentry.Integration {
-
-		  (example)
-		  integrations: [new Sentry.Integrations.Postgres({
-		    usePgNative: true // Default: false
-		  })],
-
-		*/
-		//},
-
-		ServerName:  hostname,
-		Environment: environment,
+		ServerName:         hostname,
+		Environment:        environment,
 	})
 
 	return err

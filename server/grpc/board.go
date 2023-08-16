@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"google.golang.org/grpc/metadata"
-
 	// external packages
 	"github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
@@ -22,12 +20,6 @@ func (b *Board) ListSubjects(ctx context.Context, empty *emptypb.Empty) (*Subjec
 	span := tx.StartChild("/board.Board/ListSubjects")
 	span.Status = sentry.SpanStatusOK
 	defer span.Finish()
-
-	//fixme
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		const tpKey = "traceparent"
-		log.Info("[gRPC][Metadata] ", tpKey, ": ", md.Get(tpKey))
-	}
 
 	db := ctx.Value(DBSession).(*sql.DB)
 
