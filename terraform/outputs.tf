@@ -2,7 +2,7 @@ output endpoint {
   value = aws_lb.nlb.dns_name
 }
 
-output gpc_client_variables {
+output grpc_client_variables {
   value = <<-EOF
       GRPC_CACERT        = ${base64encode(tls_self_signed_cert.ca.cert_pem)}
       GRPC_HOST          = "${aws_lb.nlb.dns_name}"
